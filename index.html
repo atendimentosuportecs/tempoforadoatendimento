@@ -1,1160 +1,5747 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
 <title>Tempo Fora do Atendimento</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<link rel="preconnect"
+      href="https://fonts.googleapis.com">
+
+<link rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap"
+      rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+
+
 <style>
-  :root{
-    --red:#D71A20;
-    --red-dark:#A11318;
-    --red-light:#FBD9DA;
-    --red-pale:#FFF3F3;
-    --ink:#201F22;
-    --gray:#726F76;
-    --gray-light:#F0EDEE;
-    --line:#E9E3E4;
-    --white:#FFFFFF;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--white);
-    color:var(--ink);
-    font-family:'Inter',-apple-system,sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  .mono{font-family:'IBM Plex Mono',monospace;}
-  .disp{font-family:'Space Grotesk',sans-serif;}
 
-  /* ---------- topbar ---------- */
+:root{
+  --red:#D71A20;
+  --red-dark:#A11318;
+  --red-light:#FBD9DA;
+  --red-pale:#FFF3F3;
+  --ink:#201F22;
+  --gray:#726F76;
+  --gray-light:#F0EDEE;
+  --line:#E9E3E4;
+  --white:#FFFFFF;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:var(--white);
+  color:var(--ink);
+  font-family:'Inter',-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+.mono{
+  font-family:'IBM Plex Mono',monospace;
+}
+
+.disp{
+  font-family:'Space Grotesk',sans-serif;
+}
+
+
+/* =========================================================
+   TOPBAR
+========================================================= */
+
+header.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:18px 32px;
+  border-bottom:1px solid var(--line);
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;
+  font-size:19px;
+  letter-spacing:.5px;
+}
+
+.brand-mark{
+  width:12px;
+  height:12px;
+  background:var(--red);
+  border-radius:2px;
+  transform:rotate(45deg);
+  flex-shrink:0;
+}
+
+nav.tabs{
+  display:flex;
+  gap:4px;
+  background:var(--gray-light);
+  padding:4px;
+  border-radius:10px;
+}
+
+.tab{
+  border:none;
+  background:transparent;
+  padding:9px 18px;
+  border-radius:8px;
+  font-family:'Inter',sans-serif;
+  font-weight:600;
+  font-size:13.5px;
+  color:var(--gray);
+  cursor:pointer;
+  transition:all .15s ease;
+}
+
+.tab.active{
+  background:var(--white);
+  color:var(--red);
+  box-shadow:0 1px 3px rgba(0,0,0,.08);
+}
+
+.tab:hover:not(.active){
+  color:var(--ink);
+}
+
+
+/* =========================================================
+   MAIN
+========================================================= */
+
+main{
+  max-width:960px;
+  margin:0 auto;
+  padding:28px 24px 64px;
+}
+
+.tab-panel{
+  display:none;
+}
+
+.tab-panel.active{
+  display:block;
+  animation:fade .2s ease;
+}
+
+@keyframes fade{
+  from{
+    opacity:0;
+    transform:translateY(4px);
+  }
+
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+h1.page-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;
+  font-weight:700;
+  margin:0 0 4px;
+}
+
+p.page-sub{
+  color:var(--gray);
+  font-size:13.5px;
+  margin:0 0 26px;
+}
+
+
+/* =========================================================
+   TIPO
+========================================================= */
+
+.tipo-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-bottom:24px;
+}
+
+.tipo-card{
+  border:1.5px solid var(--line);
+  border-radius:10px;
+  padding:14px 10px;
+  text-align:center;
+  cursor:pointer;
+  background:var(--white);
+  transition:all .15s ease;
+}
+
+.tipo-card .icon{
+  width:22px;
+  height:22px;
+  margin:0 auto 8px;
+  color:var(--red);
+}
+
+.tipo-card .icon svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+.tipo-card .label{
+  font-weight:600;
+  font-size:13px;
+}
+
+.tipo-card .tipo-desc{
+  font-size:11px;
+  color:var(--gray);
+  margin-top:4px;
+  line-height:1.35;
+}
+
+.tipo-card:hover{
+  border-color:var(--red-light);
+}
+
+.tipo-card.selected{
+  border-color:var(--red);
+  background:var(--red-pale);
+}
+
+.tipo-card.selected .tipo-desc{
+  color:var(--red-dark);
+}
+
+
+/* =========================================================
+   CARD / FORM
+========================================================= */
+
+.card{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:22px 24px;
+  margin-bottom:20px;
+}
+
+.trecho-label{
+  font-weight:600;
+  font-size:12.5px;
+  color:var(--ink);
+  margin:2px 0 8px;
+}
+
+.trecho-opc{
+  font-weight:400;
+  color:var(--gray);
+  font-size:11.5px;
+}
+
+.field-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-bottom:14px;
+}
+
+.field-row.tri{
+  grid-template-columns:1fr 1fr 1fr;
+}
+
+.field-row.quad{
+  grid-template-columns:1fr 1fr 1fr 1fr;
+}
+
+.field{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.field label{
+  font-size:12px;
+  font-weight:600;
+  color:var(--gray);
+  text-transform:uppercase;
+  letter-spacing:.4px;
+}
+
+.field input,
+.field select,
+.field textarea{
+  border:1.5px solid var(--line);
+  border-radius:8px;
+  padding:9px 11px;
+  font-size:14px;
+  font-family:'Inter',sans-serif;
+  color:var(--ink);
+  background:var(--white);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus{
+  outline:none;
+  border-color:var(--red);
+}
+
+.field textarea{
+  resize:vertical;
+  min-height:60px;
+}
+
+.field-inline{
+  display:flex;
+  gap:8px;
+  align-items:flex-end;
+}
+
+.field-inline .field{
+  flex:1;
+}
+
+.btn-mini{
+  border:1.5px solid var(--line);
+  background:var(--white);
+  border-radius:8px;
+  padding:9px 12px;
+  font-size:13px;
+  font-weight:600;
+  color:var(--gray);
+  cursor:pointer;
+  white-space:nowrap;
+}
+
+.btn-mini:hover{
+  border-color:var(--red);
+  color:var(--red);
+}
+
+.chip-select{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  padding:12px;
+  border:1.5px solid var(--line);
+  border-radius:10px;
+  max-height:180px;
+  overflow-y:auto;
+}
+
+.chip{
+  border:1.5px solid var(--line);
+  border-radius:20px;
+  padding:6px 14px;
+  font-size:12.5px;
+  font-weight:600;
+  cursor:pointer;
+  background:var(--white);
+  color:var(--ink);
+  transition:all .12s ease;
+}
+
+.chip:hover{
+  border-color:var(--red);
+}
+
+.chip.selected{
+  background:var(--red);
+  border-color:var(--red);
+  color:var(--white);
+}
+
+.manage-panel{
+  margin-top:10px;
+  border:1.5px solid var(--line);
+  border-radius:10px;
+  padding:6px;
+  max-height:220px;
+  overflow-y:auto;
+}
+
+.manage-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:8px 10px;
+  border-radius:7px;
+  font-size:13.5px;
+  font-weight:500;
+}
+
+.manage-row:hover{
+  background:var(--red-pale);
+}
+
+.manage-row .mrm{
+  border:none;
+  background:transparent;
+  color:var(--gray);
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+  padding:3px 8px;
+  border-radius:6px;
+}
+
+.manage-row .mrm:hover{
+  background:var(--red);
+  color:var(--white);
+}
+
+.manage-empty{
+  padding:14px;
+  text-align:center;
+  color:var(--gray);
+  font-size:13px;
+}
+
+
+/* =========================================================
+   READOUT
+========================================================= */
+
+.readout{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--ink);
+  border-radius:10px;
+  padding:16px 22px;
+  margin:20px 0;
+}
+
+.readout .rlabel{
+  color:#C9C6C9;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  font-weight:600;
+}
+
+.readout .rvalue{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:30px;
+  font-weight:600;
+  color:var(--white);
+}
+
+.readout .rvalue span{
+  color:var(--red);
+}
+
+.btn-primary{
+  background:var(--red);
+  color:var(--white);
+  border:none;
+  border-radius:9px;
+  padding:13px 22px;
+  font-family:'Inter',sans-serif;
+  font-weight:600;
+  font-size:14.5px;
+  cursor:pointer;
+  width:100%;
+  transition:background .15s ease;
+}
+
+.btn-primary:hover{
+  background:var(--red-dark);
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+.toast{
+  position:fixed;
+  bottom:26px;
+  left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--ink);
+  color:var(--white);
+  padding:12px 22px;
+  border-radius:9px;
+  font-size:13.5px;
+  font-weight:500;
+  opacity:0;
+  pointer-events:none;
+  transition:all .25s ease;
+  z-index:50;
+}
+
+.toast.show{
+  opacity:1;
+  transform:translateX(-50%) translateY(0);
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.stamp{
+  display:inline-block;
+  padding:4px 12px;
+  border-radius:5px;
+  border:2px solid var(--red);
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:600;
+  font-size:10.5px;
+  letter-spacing:1.6px;
+  text-transform:uppercase;
+  color:var(--red);
+  background:var(--red-pale);
+  transform:rotate(-2deg);
+  cursor:pointer;
+  user-select:none;
+  white-space:nowrap;
+}
+
+.stamp.incluido{
+  border-color:var(--gray);
+  color:var(--gray);
+  background:var(--gray-light);
+  transform:rotate(1deg);
+}
+
+.stamp.rejeitado{
+  border-color:var(--red-dark);
+  color:var(--red-dark);
+  background:var(--white);
+  transform:rotate(1deg);
+  cursor:default;
+}
+
+.stamp.excluido{
+  border-color:var(--gray);
+  color:var(--gray);
+  background:var(--white);
+  transform:rotate(0deg);
+  cursor:default;
+  text-decoration:line-through;
+}
+
+tr.row-excluido{
+  opacity:.55;
+}
+
+.audit-trail{
+  margin-top:10px;
+  padding-top:8px;
+  border-top:1px dashed var(--line);
+  font-size:11.5px;
+  color:var(--gray);
+}
+
+
+/* =========================================================
+   HISTÓRICO
+========================================================= */
+
+.filter-bar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:20px;
+}
+
+.filter-bar .field{
+  min-width:150px;
+}
+
+table.hist{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13.5px;
+}
+
+table.hist th{
+  text-align:left;
+  color:var(--gray);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  padding:8px 10px;
+  border-bottom:1.5px solid var(--line);
+}
+
+table.hist td{
+  padding:12px 10px;
+  border-bottom:1px solid var(--line);
+  vertical-align:middle;
+}
+
+table.hist tr:hover{
+  background:var(--red-pale);
+}
+
+.tipo-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-size:11.5px;
+  font-weight:600;
+  color:var(--red-dark);
+  background:var(--red-light);
+  padding:3px 10px 3px 8px;
+  border-radius:20px;
+}
+
+.tipo-tag-icon{
+  width:12px;
+  height:12px;
+  flex-shrink:0;
+}
+
+.tipo-tag-icon svg{
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+.row-detail{
+  background:var(--gray-light);
+  font-size:13px;
+  color:var(--ink);
+}
+
+.row-detail td{
+  padding:14px 16px;
+}
+
+.row-detail b{
+  color:var(--gray);
+  font-weight:600;
+}
+
+.icon-btn{
+  border:none;
+  background:transparent;
+  cursor:pointer;
+  color:var(--gray);
+  font-size:13px;
+  padding:4px 6px;
+}
+
+.icon-btn:hover{
+  color:var(--red);
+}
+
+.empty-state{
+  text-align:center;
+  padding:50px 10px;
+  color:var(--gray);
+  font-size:14px;
+}
+
+.hist-summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  background:var(--red-pale);
+  border:1px solid var(--red-light);
+  border-radius:10px;
+  padding:12px 18px;
+  margin-bottom:16px;
+}
+
+.hist-summary .hs-label{
+  font-size:12.5px;
+  color:var(--red-dark);
+  font-weight:600;
+}
+
+.hist-summary .hs-value{
+  font-family:'IBM Plex Mono',monospace;
+  font-weight:600;
+  font-size:16px;
+  color:var(--red-dark);
+}
+
+.pend-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:16px;
+}
+
+table.hist td.chk-col,
+table.hist th.chk-col{
+  width:34px;
+  text-align:center;
+}
+
+input[type="checkbox"]{
+  width:16px;
+  height:16px;
+  accent-color:var(--red);
+  cursor:pointer;
+}
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin-bottom:26px;
+}
+
+.kpi{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:18px 20px;
+}
+
+.kpi .klabel{
+  font-size:11.5px;
+  color:var(--gray);
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  font-weight:600;
+  margin-bottom:8px;
+}
+
+.kpi .kvalue{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:28px;
+  font-weight:700;
+}
+
+.kpi.accent{
+  background:var(--ink);
+  border-color:var(--ink);
+}
+
+.kpi.accent .klabel{
+  color:#C9C6C9;
+}
+
+.kpi.accent .kvalue{
+  color:var(--white);
+}
+
+.kpi.accent .kvalue span{
+  color:var(--red);
+}
+
+.colab-list{
+  margin-top:10px;
+}
+
+.colab-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 4px;
+  border-bottom:1px solid var(--line);
+  cursor:pointer;
+}
+
+.colab-row:hover{
+  background:var(--red-pale);
+}
+
+.colab-row .cname{
+  font-weight:600;
+  font-size:13.5px;
+}
+
+.colab-row .chrs{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:13.5px;
+  color:var(--red-dark);
+  font-weight:600;
+}
+
+.section-label{
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;
+  font-size:15px;
+  margin:26px 0 12px;
+}
+
+
+/* =========================================================
+   RESPONSIVO
+========================================================= */
+
+@media(max-width:640px){
+
   header.topbar{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:18px 32px;border-bottom:1px solid var(--line);
-    flex-wrap:wrap;gap:12px;
+    padding:15px;
   }
-  .brand{display:flex;align-items:center;gap:10px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;letter-spacing:0.5px;}
-  .brand-mark{width:12px;height:12px;background:var(--red);border-radius:2px;transform:rotate(45deg);flex-shrink:0;}
-  nav.tabs{display:flex;gap:4px;background:var(--gray-light);padding:4px;border-radius:10px;}
+
+  nav.tabs{
+    width:100%;
+    overflow-x:auto;
+  }
+
   .tab{
-    border:none;background:transparent;padding:9px 18px;border-radius:8px;
-    font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;color:var(--gray);
-    cursor:pointer;transition:all .15s ease;
+    padding:9px 12px;
+    white-space:nowrap;
   }
-  .tab.active{background:var(--white);color:var(--red);box-shadow:0 1px 3px rgba(0,0,0,.08);}
-  .tab:hover:not(.active){color:var(--ink);}
 
-  main{max-width:960px;margin:0 auto;padding:28px 24px 64px;}
-  .tab-panel{display:none;}
-  .tab-panel.active{display:block;animation:fade .2s ease;}
-  @keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
-
-  h1.page-title{font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;margin:0 0 4px;}
-  p.page-sub{color:var(--gray);font-size:13.5px;margin:0 0 26px;}
-
-  /* ---------- type selector ---------- */
-  .tipo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
-  .tipo-card{
-    border:1.5px solid var(--line);border-radius:10px;padding:14px 10px;text-align:center;
-    cursor:pointer;background:var(--white);transition:all .15s ease;
+  main{
+    padding:22px 15px 50px;
   }
-  .tipo-card .icon{width:22px;height:22px;margin:0 auto 8px;color:var(--red);}
-  .tipo-card .icon svg{width:100%;height:100%;display:block;}
-  .tipo-card .label{font-weight:600;font-size:13px;}
-  .tipo-card .tipo-desc{font-size:11px;color:var(--gray);margin-top:4px;line-height:1.35;}
-  .tipo-card:hover{border-color:var(--red-light);}
-  .tipo-card.selected{border-color:var(--red);background:var(--red-pale);}
-  .tipo-card.selected .tipo-desc{color:var(--red-dark);}
 
-  @media(max-width:640px){.tipo-grid{grid-template-columns:repeat(2,1fr);}}
+  .tipo-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
 
-  /* ---------- form ---------- */
-  .card{border:1px solid var(--line);border-radius:12px;padding:22px 24px;margin-bottom:20px;}
-  .trecho-label{font-weight:600;font-size:12.5px;color:var(--ink);margin:2px 0 8px;}
-  .trecho-label .trecho-opc{font-weight:400;color:var(--gray);font-size:11.5px;}
-  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
-  .field-row.tri{grid-template-columns:1fr 1fr 1fr;}
-  .field-row.quad{grid-template-columns:1fr 1fr 1fr 1fr;}
-  @media(max-width:640px){.field-row,.field-row.tri,.field-row.quad{grid-template-columns:1fr;}}
-  .field{display:flex;flex-direction:column;gap:6px;}
-  .field label{font-size:12px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;}
-  .field input,.field select,.field textarea{
-    border:1.5px solid var(--line);border-radius:8px;padding:9px 11px;font-size:14px;
-    font-family:'Inter',sans-serif;color:var(--ink);background:var(--white);
+  .field-row,
+  .field-row.tri,
+  .field-row.quad{
+    grid-template-columns:1fr;
   }
-  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--red);}
-  .field textarea{resize:vertical;min-height:60px;}
-  .field-inline{display:flex;gap:8px;align-items:flex-end;}
-  .field-inline .field{flex:1;}
-  .btn-mini{border:1.5px solid var(--line);background:var(--white);border-radius:8px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--gray);cursor:pointer;white-space:nowrap;}
-  .btn-mini:hover{border-color:var(--red);color:var(--red);}
-  .chip-select{display:flex;flex-wrap:wrap;gap:8px;padding:12px;border:1.5px solid var(--line);border-radius:10px;max-height:180px;overflow-y:auto;}
-  .chip{border:1.5px solid var(--line);border-radius:20px;padding:6px 14px;font-size:12.5px;font-weight:600;
-    cursor:pointer;background:var(--white);color:var(--ink);transition:all .12s ease;}
-  .chip:hover{border-color:var(--red);}
-  .chip.selected{background:var(--red);border-color:var(--red);color:var(--white);}
-  .manage-panel{
-    margin-top:10px;border:1.5px solid var(--line);border-radius:10px;padding:6px;
-    max-height:220px;overflow-y:auto;
-  }
-  .manage-row{
-    display:flex;align-items:center;justify-content:space-between;
-    padding:8px 10px;border-radius:7px;font-size:13.5px;font-weight:500;
-  }
-  .manage-row:hover{background:var(--red-pale);}
-  .manage-row .mrm{
-    border:none;background:transparent;color:var(--gray);font-size:12px;font-weight:600;
-    cursor:pointer;padding:3px 8px;border-radius:6px;
-  }
-  .manage-row .mrm:hover{background:var(--red);color:var(--white);}
-  .manage-empty{padding:14px;text-align:center;color:var(--gray);font-size:13px;}
 
-  /* live readout / signature element */
+  .kpi-grid{
+    grid-template-columns:1fr;
+  }
+
   .readout{
-    display:flex;align-items:center;justify-content:space-between;
-    background:var(--ink);border-radius:10px;padding:16px 22px;margin:20px 0;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:8px;
   }
-  .readout .rlabel{color:#C9C6C9;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;}
-  .readout .rvalue{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;color:var(--white);}
-  .readout .rvalue span{color:var(--red);}
 
-  .btn-primary{
-    background:var(--red);color:var(--white);border:none;border-radius:9px;
-    padding:13px 22px;font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;
-    cursor:pointer;width:100%;transition:background .15s ease;
+  .readout .rvalue{
+    font-size:25px;
   }
-  .btn-primary:hover{background:var(--red-dark);}
 
-  .toast{
-    position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);
-    background:var(--ink);color:var(--white);padding:12px 22px;border-radius:9px;
-    font-size:13.5px;font-weight:500;opacity:0;pointer-events:none;transition:all .25s ease;z-index:50;
+  .card{
+    padding:18px 15px;
+    overflow:hidden;
   }
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
-  /* ---------- stamp badge (signature element) ---------- */
-  .stamp{
-    display:inline-block;padding:4px 12px;border-radius:5px;border:2px solid var(--red);
-    font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:10.5px;letter-spacing:1.6px;
-    text-transform:uppercase;color:var(--red);background:var(--red-pale);
-    transform:rotate(-2deg);cursor:pointer;user-select:none;white-space:nowrap;
+  table.hist{
+    min-width:800px;
   }
-  .stamp.incluido{border-color:var(--gray);color:var(--gray);background:var(--gray-light);transform:rotate(1deg);}
-  .stamp.rejeitado{border-color:var(--red-dark);color:var(--red-dark);background:var(--white);transform:rotate(1deg);cursor:default;}
-  .stamp.excluido{border-color:var(--gray);color:var(--gray);background:var(--white);transform:rotate(0deg);cursor:default;text-decoration:line-through;}
-  tr.row-excluido{opacity:.55;}
-  .audit-trail{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--gray);}
 
-  /* ---------- historico ---------- */
-  .filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
-  .filter-bar .field{min-width:150px;}
-  table.hist{width:100%;border-collapse:collapse;font-size:13.5px;}
-  table.hist th{text-align:left;color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.5px;padding:8px 10px;border-bottom:1.5px solid var(--line);}
-  table.hist td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle;}
-  table.hist tr:hover{background:var(--red-pale);}
-  .tipo-tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:var(--red-dark);background:var(--red-light);padding:3px 10px 3px 8px;border-radius:20px;}
-  .tipo-tag-icon{width:12px;height:12px;flex-shrink:0;}
-  .tipo-tag-icon svg{width:100%;height:100%;display:block;}
-  .row-detail{background:var(--gray-light);font-size:13px;color:var(--ink);}
-  .row-detail td{padding:14px 16px;}
-  .row-detail b{color:var(--gray);font-weight:600;}
-  .icon-btn{border:none;background:transparent;cursor:pointer;color:var(--gray);font-size:13px;padding:4px 6px;}
-  .icon-btn:hover{color:var(--red);}
-  .empty-state{text-align:center;padding:50px 10px;color:var(--gray);font-size:14px;}
-  .hist-summary{
-    display:flex;align-items:center;justify-content:space-between;
-    background:var(--red-pale);border:1px solid var(--red-light);border-radius:10px;
-    padding:12px 18px;margin-bottom:16px;
+  .hist-table-scroll{
+    overflow-x:auto;
   }
-  .hist-summary .hs-label{font-size:12.5px;color:var(--red-dark);font-weight:600;}
-  .hist-summary .hs-value{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:16px;color:var(--red-dark);}
-  .pend-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;}
-  table.hist td.chk-col,table.hist th.chk-col{width:34px;text-align:center;}
-  input[type="checkbox"]{width:16px;height:16px;accent-color:var(--red);cursor:pointer;}
 
-  /* ---------- dashboard ---------- */
-  .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px;}
-  @media(max-width:640px){.kpi-grid{grid-template-columns:1fr;}}
-  .kpi{border:1px solid var(--line);border-radius:12px;padding:18px 20px;}
-  .kpi .klabel{font-size:11.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:8px;}
-  .kpi .kvalue{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;}
-  .kpi.accent{background:var(--ink);border-color:var(--ink);}
-  .kpi.accent .klabel{color:#C9C6C9;}
-  .kpi.accent .kvalue{color:var(--white);}
-  .kpi.accent .kvalue span{color:var(--red);}
+}
 
-  .colab-list{margin-top:10px;}
-  .colab-row{display:flex;align-items:center;justify-content:space-between;padding:12px 4px;border-bottom:1px solid var(--line);cursor:pointer;}
-  .colab-row:hover{background:var(--red-pale);}
-  .colab-row .cname{font-weight:600;font-size:13.5px;}
-  .colab-row .chrs{font-family:'IBM Plex Mono',monospace;font-size:13.5px;color:var(--red-dark);font-weight:600;}
-  .section-label{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;margin:26px 0 12px;}
 </style>
+
 </head>
+
+
 <body>
 
+
 <header class="topbar">
-  <div class="brand"><span class="brand-mark"></span>TEMPO FORA DO ATENDIMENTO</div>
+
+  <div class="brand">
+    <span class="brand-mark"></span>
+    TEMPO FORA DO ATENDIMENTO
+  </div>
+
   <nav class="tabs">
-    <button class="tab active" data-tab="novo">Novo registro</button>
-    <button class="tab" data-tab="historico">Registros</button>
-    <button class="tab" data-tab="pendentes">Gestão de registros</button>
-    <button class="tab" data-tab="dashboard">Dashboard</button>
+
+    <button class="tab active" data-tab="novo">
+      Novo registro
+    </button>
+
+    <button class="tab" data-tab="historico">
+      Registros
+    </button>
+
+    <button class="tab" data-tab="pendentes">
+      Gestão de registros
+    </button>
+
+    <button class="tab" data-tab="dashboard">
+      Dashboard
+    </button>
+
   </nav>
+
 </header>
+
 
 <main>
 
-  <!-- ================= NOVO REGISTRO ================= -->
-  <section id="tab-novo" class="tab-panel active">
-    <h1 class="page-title">Novo registro</h1>
-    <p class="page-sub">Registre o tempo fora do atendimento por treinamento, ação, reunião ou viagem.</p>
 
-    <div class="tipo-grid" id="tipoGrid">
-      <div class="tipo-card selected" data-tipo="treinamento">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 8.5l10 5.5 10-5.5L12 3z"/><path d="M6 11v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/><path d="M22 8.5v6"/></svg></div>
-        <div class="label">Treinamento</div>
-        <div class="tipo-desc">Cursos, capacitações e workshops, presenciais ou online</div>
+<!-- =======================================================
+     NOVO REGISTRO
+======================================================= -->
+
+<section id="tab-novo" class="tab-panel active">
+
+  <h1 class="page-title">
+    Novo registro
+  </h1>
+
+  <p class="page-sub">
+    Registre o tempo fora do atendimento por treinamento,
+    ação, reunião ou viagem.
+  </p>
+
+
+  <div class="tipo-grid" id="tipoGrid">
+
+
+    <div class="tipo-card selected" data-tipo="treinamento">
+
+      <div class="icon">
+
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="1.8"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+          <path d="M12 3L2 8.5l10 5.5 10-5.5L12 3z"/>
+
+          <path d="M6 11v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/>
+
+          <path d="M22 8.5v6"/>
+
+        </svg>
+
       </div>
-      <div class="tipo-card" data-tipo="acao">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg></div>
-        <div class="label">Ação</div>
-        <div class="tipo-desc">Atividades pontuais fora da rotina de atendimento</div>
+
+      <div class="label">
+        Treinamento
       </div>
-      <div class="tipo-card" data-tipo="reuniao">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/><circle cx="17" cy="8.5" r="2.2"/><path d="M15 14.8c2.2.3 4 2 4 4.7"/></svg></div>
-        <div class="label">Reunião</div>
-        <div class="tipo-desc">Reuniões internas, de gestão ou com cliente</div>
+
+      <div class="tipo-desc">
+        Cursos, capacitações e workshops,
+        presenciais ou online
       </div>
-      <div class="tipo-card" data-tipo="viagem">
-        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></div>
-        <div class="label">Viagem</div>
-        <div class="tipo-desc">Deslocamentos de ida e/ou volta entre localidades</div>
-      </div>
+
     </div>
 
-    <div class="card">
-      <div class="field-row">
-        <div class="field">
-          <label>Colaborador</label>
-          <div class="field-inline">
-            <select id="fColaborador"></select>
-            <button class="btn-mini" id="btnNovoColab" type="button">+ Novo</button>
-            <button class="btn-mini" id="btnGerenciarColab" type="button">Gerenciar</button>
-          </div>
-          <div class="manage-panel" id="painelColaboradores" style="display:none;"></div>
+
+    <div class="tipo-card" data-tipo="acao">
+
+      <div class="icon">
+
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="1.8"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+          <path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/>
+
+        </svg>
+
+      </div>
+
+      <div class="label">
+        Ação
+      </div>
+
+      <div class="tipo-desc">
+        Atividades pontuais fora da rotina de atendimento
+      </div>
+
+    </div>
+
+
+    <div class="tipo-card" data-tipo="reuniao">
+
+      <div class="icon">
+
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="1.8"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+          <circle cx="9" cy="8" r="3"/>
+
+          <path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/>
+
+          <circle cx="17" cy="8.5" r="2.2"/>
+
+          <path d="M15 14.8c2.2.3 4 2 4 4.7"/>
+
+        </svg>
+
+      </div>
+
+      <div class="label">
+        Reunião
+      </div>
+
+      <div class="tipo-desc">
+        Reuniões internas, de gestão ou com cliente
+      </div>
+
+    </div>
+
+
+    <div class="tipo-card" data-tipo="viagem">
+
+      <div class="icon">
+
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="1.8"
+             stroke-linecap="round"
+             stroke-linejoin="round">
+
+          <path d="M22 2L11 13"/>
+
+          <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+
+        </svg>
+
+      </div>
+
+      <div class="label">
+        Viagem
+      </div>
+
+      <div class="tipo-desc">
+        Deslocamentos de ida e/ou volta entre localidades
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+  <div class="card">
+
+
+    <div class="field-row">
+
+      <div class="field">
+
+        <label>
+          Colaborador
+        </label>
+
+        <div class="field-inline">
+
+          <select id="fColaborador"></select>
+
+          <button
+            class="btn-mini"
+            id="btnNovoColab"
+            type="button">
+            + Novo
+          </button>
+
+          <button
+            class="btn-mini"
+            id="btnGerenciarColab"
+            type="button">
+            Gerenciar
+          </button>
+
         </div>
-        <div class="field">
-          <label>Data</label>
-          <input type="date" id="fData">
+
+        <div
+          class="manage-panel"
+          id="painelColaboradores"
+          style="display:none;">
         </div>
+
       </div>
 
-      <div id="camposEspecificos"></div>
 
-      <div class="readout">
-        <div class="rlabel">Tempo total fora do atendimento</div>
-        <div class="rvalue" id="rvalue">00h <span>00min</span></div>
+      <div class="field">
+
+        <label>
+          Data
+        </label>
+
+        <input
+          type="date"
+          id="fData">
+
       </div>
 
-      <button class="btn-primary" id="btnSalvar">Salvar registro</button>
-    </div>
-  </section>
-
-  <!-- ================= HISTÓRICO ================= -->
-  <section id="tab-historico" class="tab-panel">
-    <h1 class="page-title">Registros</h1>
-    <p class="page-sub">Consulte, filtre e atualize o status de cada registro antes de lançar na planilha de desconto.</p>
-
-    <div class="filter-bar">
-      <div class="field"><label>Mês</label><input type="month" id="hFiltroMes"></div>
-      <div class="field"><label>Colaborador</label><select id="hFiltroColab"><option value="">Todos</option></select></div>
-      <div class="field"><label>Tipo</label>
-        <select id="hFiltroTipo">
-          <option value="">Todos</option>
-          <option value="treinamento">Treinamento</option>
-          <option value="acao">Ação</option>
-          <option value="reuniao">Reunião</option>
-          <option value="viagem">Viagem</option>
-        </select>
-      </div>
-      <div class="field"><label>Status</label>
-        <select id="hFiltroStatus">
-          <option value="">Todos</option>
-          <option value="pendente">Pendente</option>
-          <option value="incluido">Incluído</option>
-          <option value="rejeitado">Recusado</option>
-          <option value="excluido">Excluído</option>
-        </select>
-      </div>
     </div>
 
-    <div class="hist-summary" id="histSummary"></div>
-    <div id="histTableWrap"></div>
-  </section>
 
-  <!-- ================= PENDENTES ================= -->
-  <section id="tab-pendentes" class="tab-panel">
-    <h1 class="page-title">Gestão de registros</h1>
-    <p class="page-sub">Acompanhe os registros pendentes de lançamento na planilha, aceite ou recuse, e consulte o histórico de criações e exclusões.</p>
+    <div id="camposEspecificos"></div>
 
-    <div class="filter-bar">
-      <div class="field"><label>Mês</label><input type="month" id="pFiltroMes"></div>
-      <div class="field"><label>Colaborador</label><select id="pFiltroColab"><option value="">Todos</option></select></div>
+
+    <div class="readout">
+
+      <div class="rlabel">
+        Tempo total fora do atendimento
+      </div>
+
+      <div
+        class="rvalue"
+        id="rvalue">
+        00h <span>00min</span>
+      </div>
+
     </div>
 
-    <div class="hist-summary" id="pendSummary"></div>
 
-    <div id="pendTableWrap"></div>
+    <button
+      class="btn-primary"
+      id="btnSalvar">
 
-    <div class="pend-actions">
-      <button class="btn-mini" id="btnExportarCSV">Exportar CSV</button>
-      <button class="btn-mini" id="btnRecusarSelecionados" style="color:var(--red-dark);border-color:var(--red-light);">Recusar selecionados</button>
-      <button class="btn-primary" id="btnMarcarIncluidos" style="width:auto;padding:11px 20px;">Marcar selecionados como incluídos</button>
-    </div>
-  </section>
+      Salvar registro
 
-  <!-- ================= DASHBOARD ================= -->
-  <section id="tab-dashboard" class="tab-panel">
-    <h1 class="page-title">Dashboard</h1>
-    <p class="page-sub">Visão consolidada do tempo fora do atendimento por mês.</p>
+    </button>
 
-    <div class="filter-bar">
-      <div class="field" style="max-width:200px;">
-        <label>Mês de referência</label>
-        <input type="month" id="dFiltroMes">
-      </div>
-      <div class="field" style="min-width:220px;">
-        <label>Colaborador</label>
-        <select id="dFiltroColab"><option value="">Todos os colaboradores</option></select>
-      </div>
-    </div>
 
-    <div class="kpi-grid">
-      <div class="kpi accent">
-        <div class="klabel">Horas fora no mês</div>
-        <div class="kvalue" id="kpiHoras">00h <span>00</span></div>
-      </div>
-      <div class="kpi">
-        <div class="klabel">Registros no mês</div>
-        <div class="kvalue" id="kpiRegistros">0</div>
-      </div>
-      <div class="kpi">
-        <div class="klabel">Pendentes</div>
-        <div class="kvalue" id="kpiPendentes">0</div>
-      </div>
-    </div>
+  </div>
 
-    <div class="section-label" id="chartLabel">Horas por colaborador</div>
-    <p class="page-sub" style="margin-top:-8px;" id="chartSub">Inclui horas de quem participou como convidado em treinamentos e reuniões, não só quem cadastrou o registro.</p>
-    <div style="position:relative;height:240px;">
-      <canvas id="chartColab"></canvas>
+</section>
+
+
+<!-- =======================================================
+     HISTÓRICO
+======================================================= -->
+
+<section id="tab-historico" class="tab-panel">
+
+  <h1 class="page-title">
+    Registros
+  </h1>
+
+  <p class="page-sub">
+    Consulte, filtre e atualize o status de cada registro
+    antes de lançar na planilha de desconto.
+  </p>
+
+
+  <div class="filter-bar">
+
+    <div class="field">
+
+      <label>
+        Mês
+      </label>
+
+      <input
+        type="month"
+        id="hFiltroMes">
+
     </div>
 
-    <div class="section-label" id="listLabel">Colaboradores no mês</div>
-    <p class="page-sub" style="margin-top:-8px;" id="listSub">Clique em um colaborador para ver os registros detalhados dele.</p>
-    <div class="colab-list" id="dColabList"></div>
-  </section>
+
+    <div class="field">
+
+      <label>
+        Colaborador
+      </label>
+
+      <select id="hFiltroColab">
+
+        <option value="">
+          Todos
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Tipo
+      </label>
+
+      <select id="hFiltroTipo">
+
+        <option value="">
+          Todos
+        </option>
+
+        <option value="treinamento">
+          Treinamento
+        </option>
+
+        <option value="acao">
+          Ação
+        </option>
+
+        <option value="reuniao">
+          Reunião
+        </option>
+
+        <option value="viagem">
+          Viagem
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Status
+      </label>
+
+      <select id="hFiltroStatus">
+
+        <option value="">
+          Todos
+        </option>
+
+        <option value="pendente">
+          Pendente
+        </option>
+
+        <option value="incluido">
+          Incluído
+        </option>
+
+        <option value="rejeitado">
+          Recusado
+        </option>
+
+        <option value="excluido">
+          Excluído
+        </option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+
+  <div
+    class="hist-summary"
+    id="histSummary">
+  </div>
+
+
+  <div
+    id="histTableWrap"
+    class="hist-table-scroll">
+  </div>
+
+</section>
+
+
+<!-- =======================================================
+     GESTÃO
+======================================================= -->
+
+<section id="tab-pendentes" class="tab-panel">
+
+  <h1 class="page-title">
+    Gestão de registros
+  </h1>
+
+  <p class="page-sub">
+    Acompanhe os registros pendentes de lançamento na
+    planilha, aceite ou recuse, e consulte o histórico.
+  </p>
+
+
+  <div class="filter-bar">
+
+    <div class="field">
+
+      <label>
+        Mês
+      </label>
+
+      <input
+        type="month"
+        id="pFiltroMes">
+
+    </div>
+
+
+    <div class="field">
+
+      <label>
+        Colaborador
+      </label>
+
+      <select id="pFiltroColab">
+
+        <option value="">
+          Todos
+        </option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+
+  <div
+    class="hist-summary"
+    id="pendSummary">
+  </div>
+
+
+  <div
+    id="pendTableWrap"
+    class="hist-table-scroll">
+  </div>
+
+
+  <div class="pend-actions">
+
+    <button
+      class="btn-mini"
+      id="btnExportarCSV">
+      Exportar CSV
+    </button>
+
+    <button
+      class="btn-mini"
+      id="btnRecusarSelecionados"
+      style="color:var(--red-dark);border-color:var(--red-light);">
+      Recusar selecionados
+    </button>
+
+    <button
+      class="btn-primary"
+      id="btnMarcarIncluidos"
+      style="width:auto;padding:11px 20px;">
+      Marcar selecionados como incluídos
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- =======================================================
+     DASHBOARD
+======================================================= -->
+
+<section id="tab-dashboard" class="tab-panel">
+
+  <h1 class="page-title">
+    Dashboard
+  </h1>
+
+  <p class="page-sub">
+    Visão consolidada do tempo fora do atendimento por mês.
+  </p>
+
+
+  <div class="filter-bar">
+
+    <div
+      class="field"
+      style="max-width:200px;">
+
+      <label>
+        Mês de referência
+      </label>
+
+      <input
+        type="month"
+        id="dFiltroMes">
+
+    </div>
+
+
+    <div
+      class="field"
+      style="min-width:220px;">
+
+      <label>
+        Colaborador
+      </label>
+
+      <select id="dFiltroColab">
+
+        <option value="">
+          Todos os colaboradores
+        </option>
+
+      </select>
+
+    </div>
+
+  </div>
+
+
+  <div class="kpi-grid">
+
+    <div class="kpi accent">
+
+      <div class="klabel">
+        Horas fora no mês
+      </div>
+
+      <div
+        class="kvalue"
+        id="kpiHoras">
+        00h <span>00</span>
+      </div>
+
+    </div>
+
+
+    <div class="kpi">
+
+      <div class="klabel">
+        Registros no mês
+      </div>
+
+      <div
+        class="kvalue"
+        id="kpiRegistros">
+        0
+      </div>
+
+    </div>
+
+
+    <div class="kpi">
+
+      <div class="klabel">
+        Pendentes
+      </div>
+
+      <div
+        class="kvalue"
+        id="kpiPendentes">
+        0
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div
+    class="section-label"
+    id="chartLabel">
+    Horas por colaborador
+  </div>
+
+
+  <p
+    class="page-sub"
+    style="margin-top:-8px;"
+    id="chartSub">
+
+    Inclui horas de quem participou como convidado
+    em treinamentos e reuniões.
+
+  </p>
+
+
+  <div
+    style="position:relative;height:240px;">
+
+    <canvas id="chartColab"></canvas>
+
+  </div>
+
+
+  <div
+    class="section-label"
+    id="listLabel">
+
+    Colaboradores no mês
+
+  </div>
+
+
+  <p
+    class="page-sub"
+    style="margin-top:-8px;"
+    id="listSub">
+
+    Clique em um colaborador para ver os registros.
+
+  </p>
+
+
+  <div
+    class="colab-list"
+    id="dColabList">
+  </div>
+
+</section>
+
 
 </main>
 
-<div class="toast" id="toast"></div>
+
+<div
+  class="toast"
+  id="toast">
+</div>
+
 
 <script>
+
+/* =========================================================
+   SUPABASE
+========================================================= */
+
+/*
+  COLOQUE AQUI OS DADOS DO SEU PROJETO.
+
+  Supabase:
+  Project Settings
+  → API
+*/
+
+const SUPABASE_URL =
+  'https://qtgvbjrqlmwwdzgfbtgj.supabase.co';
+
+const SUPABASE_ANON_KEY =
+  'sb_publishable_lzwC8IiDRg_RdV2vZc65rg_6SUKcMty';
+
+const SUPABASE_HEADERS = {
+  'apikey': SUPABASE_ANON_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+  'Content-Type': 'application/json'
+};
+
+const { createClient } = supabase;
+
+const db = createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
+
+
+/* =========================================================
+   VARIÁVEIS
+========================================================= */
+
 let registros = [];
+
 let colaboradores = [];
+
 let tipoAtual = 'treinamento';
 
-const TIPO_LABEL = {treinamento:'Treinamento', acao:'Ação', reuniao:'Reunião', viagem:'Viagem'};
-const TIPO_ICON = {
-  treinamento:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 8.5l10 5.5 10-5.5L12 3z"/><path d="M6 11v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/><path d="M22 8.5v6"/></svg>',
-  acao:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/></svg>',
-  reuniao:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/><circle cx="17" cy="8.5" r="2.2"/><path d="M15 14.8c2.2.3 4 2 4 4.7"/></svg>',
-  viagem:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>'
+let chartInstance = null;
+
+
+const TIPO_LABEL = {
+
+  treinamento:'Treinamento',
+
+  acao:'Ação',
+
+  reuniao:'Reunião',
+
+  viagem:'Viagem'
+
 };
+
+
+const TIPO_ICON = {
+
+  treinamento:`
+    <svg viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round">
+
+      <path d="M12 3L2 8.5l10 5.5 10-5.5L12 3z"/>
+
+      <path d="M6 11v5c0 1.66 2.69 3 6 3s6-1.34 6-3v-5"/>
+
+      <path d="M22 8.5v6"/>
+
+    </svg>
+  `,
+
+  acao:`
+    <svg viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round">
+
+      <path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z"/>
+
+    </svg>
+  `,
+
+  reuniao:`
+    <svg viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round">
+
+      <circle cx="9" cy="8" r="3"/>
+
+      <path d="M3.5 20c0-3.3 2.5-5.5 5.5-5.5s5.5 2.2 5.5 5.5"/>
+
+      <circle cx="17" cy="8.5" r="2.2"/>
+
+      <path d="M15 14.8c2.2.3 4 2 4 4.7"/>
+
+    </svg>
+  `,
+
+  viagem:`
+    <svg viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round">
+
+      <path d="M22 2L11 13"/>
+
+      <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
+
+    </svg>
+  `
+
+};
+
+
 function tipoTagHTML(tipo){
-  return `<span class="tipo-tag"><span class="tipo-tag-icon">${TIPO_ICON[tipo]}</span>${TIPO_LABEL[tipo]}</span>`;
+
+  return `
+    <span class="tipo-tag">
+
+      <span class="tipo-tag-icon">
+        ${TIPO_ICON[tipo] || ''}
+      </span>
+
+      ${TIPO_LABEL[tipo] || tipo}
+
+    </span>
+  `;
+
 }
 
-/* ---------------- storage (Google Apps Script) ---------------- */
-// Cole aqui a URL do seu App da Web do Apps Script (termina em /exec)
-const API_URL = 'COLE_AQUI_A_URL_DO_APPS_SCRIPT';
 
-async function apiGet(key){
-  const res = await fetch(API_URL + '?key=' + encodeURIComponent(key));
-  const data = await res.json();
-  return data.value ? data.value : null;
-}
-async function apiSet(key, value){
-  await fetch(API_URL, {
-    method:'POST',
-    headers:{'Content-Type':'text/plain;charset=utf-8'}, // evita preflight CORS
-    body: JSON.stringify({ key, value })
-  });
-}
+/* =========================================================
+   SEGURANÇA HTML
+========================================================= */
 
-async function loadData(){
-  try{
-    const v = await apiGet('registros');
-    registros = v ? JSON.parse(v) : [];
-  }catch(e){ registros = []; }
+function esc(valor){
 
-  try{
-    const v = await apiGet('colaboradores');
-    colaboradores = v ? JSON.parse(v) : null;
-  }catch(e){ colaboradores = null; }
+  return String(valor ?? '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#039;');
 
-  const equipeCompleta = ['Síndel Vitória','Karina Alves','Lucas Silva','Bruno Oliveira','Eduardo Paiva',
-    'Pablo Rocha','Karyne Brandão','Letícia Mendes','Luzia Silva','Thaís Araújo',
-    'Dara Souza','Alana Suellen','Ana Lísia Sá','Júlia Costa','Lara Morgana',
-    'Sara Gomes','Erasmo Oliveira','Rafael Mathias','Ana Patrícia','Elaine Trindade'];
-
-  if(!colaboradores){
-    colaboradores = equipeCompleta.slice();
-    await saveColaboradores();
-  } else {
-    let mudou = false;
-    equipeCompleta.forEach(n=>{
-      if(!colaboradores.includes(n)){ colaboradores.push(n); mudou = true; }
-    });
-    if(mudou) await saveColaboradores();
-  }
-}
-async function saveRegistros(){
-  try{ await apiSet('registros', JSON.stringify(registros)); }
-  catch(e){ console.error('Erro ao salvar registros', e); }
-}
-async function saveColaboradores(){
-  try{ await apiSet('colaboradores', JSON.stringify(colaboradores)); }
-  catch(e){ console.error('Erro ao salvar colaboradores', e); }
 }
 
-/* ---------------- helpers ---------------- */
-function toMinutes(hhmm){
-  if(!hhmm) return null;
-  const [h,m] = hhmm.split(':').map(Number);
-  return h*60+m;
+
+/* =========================================================
+   DATAS
+========================================================= */
+
+function todayISO(){
+
+  const d = new Date();
+
+  const ano = d.getFullYear();
+
+  const mes = String(
+    d.getMonth()+1
+  ).padStart(2,'0');
+
+  const dia = String(
+    d.getDate()
+  ).padStart(2,'0');
+
+  return `${ano}-${mes}-${dia}`;
+
 }
-function diffHoras(inicio, fim){
-  const a = toMinutes(inicio), b = toMinutes(fim);
-  if(a===null||b===null) return 0;
-  let d = b-a;
-  if(d<0) d += 24*60;
-  return d/60;
+
+
+function currentMonth(){
+
+  return todayISO().slice(0,7);
+
 }
-function fmtHoras(dec){
-  const totalMin = Math.round(dec*60);
-  const h = Math.floor(totalMin/60);
-  const m = totalMin%60;
-  return {h:String(h).padStart(2,'0'), m:String(m).padStart(2,'0')};
-}
-function fmtHorasTxt(dec){
-  const f = fmtHoras(dec);
-  return f.h+'h '+f.m+'min';
-}
-function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2200);
-}
-function todayISO(){ return new Date().toISOString().slice(0,10); }
-function currentMonth(){ return new Date().toISOString().slice(0,7); }
+
+
 function fmtDataHora(ts){
+
   if(!ts) return '-';
+
   const d = new Date(ts);
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mm = String(d.getMonth()+1).padStart(2,'0');
+
+  const dd = String(
+    d.getDate()
+  ).padStart(2,'0');
+
+  const mm = String(
+    d.getMonth()+1
+  ).padStart(2,'0');
+
   const yy = d.getFullYear();
-  const hh = String(d.getHours()).padStart(2,'0');
-  const mi = String(d.getMinutes()).padStart(2,'0');
+
+  const hh = String(
+    d.getHours()
+  ).padStart(2,'0');
+
+  const mi = String(
+    d.getMinutes()
+  ).padStart(2,'0');
+
   return `${dd}/${mm}/${yy} ${hh}:${mi}`;
+
 }
 
-/* ---------------- tabs ---------------- */
-document.querySelectorAll('.tab').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
-    if(btn.dataset.tab==='historico') renderHistorico();
-    if(btn.dataset.tab==='pendentes') renderPendentes();
-    if(btn.dataset.tab==='dashboard') renderDashboard();
-  });
-});
-function goToHistoricoComFiltro(colab, mes){
-  document.querySelector('.tab[data-tab="historico"]').click();
-  document.getElementById('hFiltroColab').value = colab || '';
-  document.getElementById('hFiltroMes').value = mes || '';
-  renderHistorico();
+
+/* =========================================================
+   HORAS
+========================================================= */
+
+function toMinutes(hhmm){
+
+  if(!hhmm) return null;
+
+  const partes = hhmm
+    .split(':')
+    .map(Number);
+
+  return partes[0]*60 + partes[1];
+
 }
 
-/* ---------------- colaboradores select ---------------- */
-function populaColaboradorSelects(){
-  const selects = [document.getElementById('fColaborador'), document.getElementById('hFiltroColab'), document.getElementById('pFiltroColab'), document.getElementById('dFiltroColab')];
-  selects.forEach((sel,i)=>{
-    const keepVal = sel.value;
-    const base = i!==0 ? '<option value="">Todos</option>' : '';
-    sel.innerHTML = base + colaboradores.map(c=>`<option value="${c}">${c}</option>`).join('');
-    if(keepVal) sel.value = keepVal;
-  });
-}
-document.getElementById('btnNovoColab').addEventListener('click', async ()=>{
-  const nome = prompt('Nome do novo colaborador:');
-  if(nome && nome.trim()){
-    colaboradores.push(nome.trim());
-    await saveColaboradores();
-    populaColaboradorSelects();
-    document.getElementById('fColaborador').value = nome.trim();
-    if(tipoAtual==='treinamento' || tipoAtual==='reuniao'){
-      const jaSelecionados = getParticipantesSelecionados('fParticipantesChips');
-      criaChipsParticipantes('fParticipantesChips', jaSelecionados);
-    }
-    renderPainelColaboradores();
-    showToast('Colaborador adicionado');
-  }
-});
 
-document.getElementById('btnGerenciarColab').addEventListener('click', ()=>{
-  const painel = document.getElementById('painelColaboradores');
-  const abrindo = painel.style.display==='none';
-  painel.style.display = abrindo ? 'block' : 'none';
-  if(abrindo) renderPainelColaboradores();
-});
+function diffHoras(inicio,fim){
 
-function renderPainelColaboradores(){
-  const painel = document.getElementById('painelColaboradores');
-  if(colaboradores.length===0){
-    painel.innerHTML = '<div class="manage-empty">Nenhum colaborador cadastrado.</div>';
-    return;
-  }
-  painel.innerHTML = colaboradores.slice().sort().map(c=>`
-    <div class="manage-row">
-      <span>${c}</span>
-      <button class="mrm" type="button" data-colab="${c}">Remover</button>
-    </div>
-  `).join('');
-  painel.querySelectorAll('.mrm').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      const nome = btn.dataset.colab;
-      if(!confirm(`Remover "${nome}" da lista de colaboradores? Os registros já lançados para essa pessoa continuam salvos no histórico.`)) return;
-      colaboradores = colaboradores.filter(c=>c!==nome);
-      await saveColaboradores();
-      populaColaboradorSelects();
-      renderPainelColaboradores();
-      if(tipoAtual==='treinamento' || tipoAtual==='reuniao'){
-        const jaSelecionados = getParticipantesSelecionados('fParticipantesChips').filter(p=>p!==nome);
-        criaChipsParticipantes('fParticipantesChips', jaSelecionados);
-      }
-      showToast('Colaborador removido');
-    });
-  });
+  const a = toMinutes(inicio);
+
+  const b = toMinutes(fim);
+
+  if(a===null || b===null)
+    return 0;
+
+  let d = b-a;
+
+  if(d<0)
+    d += 24*60;
+
+  return d/60;
+
 }
 
-/* ---------------- tipo selector ---------------- */
-document.getElementById('tipoGrid').addEventListener('click', (e)=>{
-  const card = e.target.closest('.tipo-card');
-  if(!card) return;
-  document.querySelectorAll('.tipo-card').forEach(c=>c.classList.remove('selected'));
-  card.classList.add('selected');
-  tipoAtual = card.dataset.tipo;
-  renderCamposEspecificos();
-});
 
-function renderCamposEspecificos(){
-  const wrap = document.getElementById('camposEspecificos');
-  let html = '';
+function fmtHoras(dec){
 
-  if(tipoAtual==='viagem'){
-    html += `
-      <div class="trecho-label">Trecho de ida <span class="trecho-opc">(preencha este ou o de volta — não precisa dos dois)</span></div>
-      <div class="field-row">
-        <div class="field"><label>Origem</label><input type="text" id="fOrigemIda" placeholder="Ex: Sobral"></div>
-        <div class="field"><label>Destino</label><input type="text" id="fDestinoIda" placeholder="Ex: Itapipoca"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Saída</label><input type="time" id="fIdaSaida"></div>
-        <div class="field"><label>Chegada</label><input type="time" id="fIdaChegada"></div>
-      </div>
-      <div class="trecho-label">Trecho de volta <span class="trecho-opc">(opcional)</span></div>
-      <div class="field-row">
-        <div class="field"><label>Origem</label><input type="text" id="fOrigemVolta" placeholder="Ex: Itapipoca"></div>
-        <div class="field"><label>Destino</label><input type="text" id="fDestinoVolta" placeholder="Ex: Sobral"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Saída</label><input type="time" id="fVoltaSaida"></div>
-        <div class="field"><label>Chegada</label><input type="time" id="fVoltaChegada"></div>
-      </div>
-      <div class="field-row"><div class="field" style="grid-column:1/-1"><label>Observação</label><textarea id="fObs" placeholder="Detalhes da viagem"></textarea></div></div>
-    `;
-  } else {
-    html += `
-      <div class="field-row">
-        <div class="field"><label>Hora inicial</label><input type="time" id="fHoraInicial"></div>
-        <div class="field"><label>Hora final</label><input type="time" id="fHoraFinal"></div>
-      </div>
-    `;
-    if(tipoAtual==='treinamento'){
-      html += `
-        <div class="field-row"><div class="field"><label>Tema</label><input type="text" id="fTema" placeholder="Ex: Robôs (RPA)"></div>
-        <div class="field"><label>Ministrante</label><input type="text" id="fMinistrante"></div></div>
-        <div class="field-row tri">
-          <div class="field"><label>Modalidade</label><select id="fModalidade"><option value="Presencial">Presencial</option><option value="Online">Online</option></select></div>
-          <div class="field"><label>Instituição</label><input type="text" id="fInstituicao"></div>
-        </div>
-        <div class="field-row"><div class="field" style="grid-column:1/-1"><label>Participantes</label><div class="chip-select" id="fParticipantesChips"></div></div></div>
-        <div class="field-row"><div class="field" style="grid-column:1/-1"><label>Conteúdo programático</label><textarea id="fConteudo"></textarea></div></div>
-      `;
-    } else if(tipoAtual==='acao'){
-      html += `
-        <div class="field-row"><div class="field" style="grid-column:1/-1"><label>Qual foi a ação</label><input type="text" id="fAcao" placeholder="Descreva a ação realizada"></div></div>
-        <div class="field-row"><div class="field" style="grid-column:1/-1"><label>Observação</label><textarea id="fObs"></textarea></div></div>
-      `;
-    } else if(tipoAtual==='reuniao'){
-      html += `
-        <div class="field-row"><div class="field" style="grid-column:1/-1"><label>Tipo de reunião</label><select id="fTipoReuniao"><option>Interna</option><option>Gestão</option><option>Com cliente</option></select></div></div>
-        <div class="field-row"><div class="field" style="grid-column:1/-1"><label>Participantes</label><div class="chip-select" id="fParticipantesChips"></div></div></div>
-        <div class="field-row"><div class="field" style="grid-column:1/-1"><label>Observação</label><textarea id="fObs"></textarea></div></div>
-      `;
-    }
-  }
-  wrap.innerHTML = html;
-  wrap.querySelectorAll('input[type="time"]').forEach(el=>el.addEventListener('input', atualizaReadout));
-  if(tipoAtual==='treinamento' || tipoAtual==='reuniao'){
-    criaChipsParticipantes('fParticipantesChips');
-  }
-  atualizaReadout();
-}
+  const totalMin =
+    Math.round(dec*60);
 
-function criaChipsParticipantes(containerId, preselecionados=[]){
-  const wrap = document.getElementById(containerId);
-  if(!wrap) return;
-  wrap.innerHTML = colaboradores.map(c=>{
-    const sel = preselecionados.includes(c);
-    return `<button type="button" class="chip ${sel?'selected':''}" data-nome="${c}">${sel?'✓':'+'} ${c}</button>`;
-  }).join('');
-  wrap.querySelectorAll('.chip').forEach(chip=>{
-    chip.addEventListener('click', ()=>{
-      const isSel = chip.classList.toggle('selected');
-      chip.textContent = (isSel?'✓ ':'+ ')+chip.dataset.nome;
-    });
-  });
-}
-function getParticipantesSelecionados(containerId){
-  return Array.from(document.querySelectorAll('#'+containerId+' .chip.selected')).map(c=>c.dataset.nome);
-}
+  const h =
+    Math.floor(totalMin/60);
 
-function calculaHorasViagem(idaSaida, idaChegada, voltaSaida, voltaChegada){
-  let total = 0;
-  if(idaSaida && idaChegada) total += diffHoras(idaSaida, idaChegada);
-  if(voltaSaida && voltaChegada) total += diffHoras(voltaSaida, voltaChegada);
-  return total;
-}
-function calculaHorasAtual(){
-  if(tipoAtual==='viagem'){
-    const idaSaida = document.getElementById('fIdaSaida')?.value;
-    const idaChegada = document.getElementById('fIdaChegada')?.value;
-    const voltaSaida = document.getElementById('fVoltaSaida')?.value;
-    const voltaChegada = document.getElementById('fVoltaChegada')?.value;
-    return calculaHorasViagem(idaSaida, idaChegada, voltaSaida, voltaChegada);
-  } else {
-    const hi = document.getElementById('fHoraInicial')?.value;
-    const hf = document.getElementById('fHoraFinal')?.value;
-    return diffHoras(hi, hf);
-  }
-}
-function atualizaReadout(){
-  const dec = calculaHorasAtual();
-  const f = fmtHoras(dec);
-  document.getElementById('rvalue').innerHTML = f.h+'h <span>'+f.m+'min</span>';
-}
+  const m =
+    totalMin%60;
 
-/* ---------------- salvar registro ---------------- */
-document.getElementById('btnSalvar').addEventListener('click', async ()=>{
-  const colaborador = document.getElementById('fColaborador').value;
-  const data = document.getElementById('fData').value;
+  return {
 
-  if(!colaborador){ showToast('Selecione o colaborador'); return; }
-  if(!data){ showToast('Informe a data'); return; }
+    h:String(h).padStart(2,'0'),
 
-  let horaInicial, horaFinal, extra = {};
+    m:String(m).padStart(2,'0')
 
-  if(tipoAtual==='viagem'){
-    const origemIda = document.getElementById('fOrigemIda').value;
-    const destinoIda = document.getElementById('fDestinoIda').value;
-    const idaSaida = document.getElementById('fIdaSaida').value;
-    const idaChegada = document.getElementById('fIdaChegada').value;
-    const origemVolta = document.getElementById('fOrigemVolta').value;
-    const destinoVolta = document.getElementById('fDestinoVolta').value;
-    const voltaSaida = document.getElementById('fVoltaSaida').value;
-    const voltaChegada = document.getElementById('fVoltaChegada').value;
-
-    const temIda = idaSaida && idaChegada;
-    const temVolta = voltaSaida && voltaChegada;
-    if(!temIda && !temVolta){ showToast('Informe ao menos um trecho completo (saída e chegada)'); return; }
-
-    horaInicial = temIda ? idaSaida : voltaSaida;
-    horaFinal = temVolta ? voltaChegada : idaChegada;
-    extra = {
-      origemIda, destinoIda, idaSaida, idaChegada,
-      origemVolta, destinoVolta, voltaSaida, voltaChegada,
-      obs: document.getElementById('fObs').value
-    };
-  } else {
-    horaInicial = document.getElementById('fHoraInicial').value;
-    horaFinal = document.getElementById('fHoraFinal').value;
-    if(!horaInicial || !horaFinal){ showToast('Informe hora inicial e final'); return; }
-
-    if(tipoAtual==='treinamento'){
-      extra = {
-        tema: document.getElementById('fTema').value,
-        ministrante: document.getElementById('fMinistrante').value,
-        modalidade: document.getElementById('fModalidade').value,
-        instituicao: document.getElementById('fInstituicao').value,
-        participantes: getParticipantesSelecionados('fParticipantesChips').join(', '),
-        conteudo: document.getElementById('fConteudo').value
-      };
-    } else if(tipoAtual==='acao'){
-      extra = {
-        acao: document.getElementById('fAcao').value,
-        obs: document.getElementById('fObs').value
-      };
-    } else if(tipoAtual==='reuniao'){
-      extra = {
-        tipoReuniao: document.getElementById('fTipoReuniao').value,
-        participantes: getParticipantesSelecionados('fParticipantesChips').join(', '),
-        obs: document.getElementById('fObs').value
-      };
-    }
-  }
-
-  const horasTotal = tipoAtual==='viagem'
-    ? calculaHorasViagem(extra.idaSaida, extra.idaChegada, extra.voltaSaida, extra.voltaChegada)
-    : diffHoras(horaInicial, horaFinal);
-
-  const registro = {
-    id: uid(),
-    colaborador, tipo: tipoAtual, data, horaInicial, horaFinal, horasTotal,
-    status: 'pendente',
-    createdAt: Date.now(),
-    ...extra
   };
 
-  registros.push(registro);
-  await saveRegistros();
-  showToast('Registro salvo');
-
-  document.getElementById('fData').value = todayISO();
-  renderCamposEspecificos();
-});
-
-/* ---------------- histórico ---------------- */
-document.getElementById('hFiltroMes').addEventListener('change', renderHistorico);
-document.getElementById('hFiltroColab').addEventListener('change', renderHistorico);
-document.getElementById('hFiltroTipo').addEventListener('change', renderHistorico);
-document.getElementById('hFiltroStatus').addEventListener('change', renderHistorico);
-
-function auditoriaHTML(r){
-  const linhas = [`<b>Criado em:</b> ${fmtDataHora(r.createdAt)}`];
-  if(r.rejectedAt) linhas.push(`<b>Recusado em:</b> ${fmtDataHora(r.rejectedAt)}`);
-  if(r.deletedAt) linhas.push(`<b>Excluído em:</b> ${fmtDataHora(r.deletedAt)}`);
-  if(r.restoredAt) linhas.push(`<b>Restaurado em:</b> ${fmtDataHora(r.restoredAt)}`);
-  return `<div class="audit-trail">${linhas.join(' &nbsp;·&nbsp; ')}</div>`;
 }
 
-function detalheHTML(r){
-  let corpo = '';
-  if(r.tipo==='treinamento'){
-    corpo = `<b>Tema:</b> ${r.tema||'-'} &nbsp;·&nbsp; <b>Ministrante:</b> ${r.ministrante||'-'} &nbsp;·&nbsp; <b>Modalidade:</b> ${r.modalidade||'-'}<br>
-      <b>Instituição:</b> ${r.instituicao||'-'}<br>
-      <b>Participantes:</b> ${r.participantes||'-'}<br>
-      <b>Conteúdo programático:</b> ${r.conteudo||'-'}`;
-  } else if(r.tipo==='acao'){
-    corpo = `<b>Ação:</b> ${r.acao||'-'}<br><b>Obs:</b> ${r.obs||'-'}`;
-  } else if(r.tipo==='reuniao'){
-    corpo = `<b>Tipo:</b> ${r.tipoReuniao||'-'} &nbsp;·&nbsp; <b>Participantes:</b> ${r.participantes||'-'}<br><b>Obs:</b> ${r.obs||'-'}`;
-  } else if(r.tipo==='viagem'){
-    const trechos = [];
-    if(r.idaSaida || r.idaChegada){
-      trechos.push(`<b>${r.origemIda||'?'} → ${r.destinoIda||'?'}:</b> ${r.idaSaida||'-'} às ${r.idaChegada||'-'}`);
+
+function fmtHorasTxt(dec){
+
+  const f = fmtHoras(dec);
+
+  return `${f.h}h ${f.m}min`;
+
+}
+
+
+/* =========================================================
+   UTILITÁRIOS
+========================================================= */
+
+function uid(){
+
+  return crypto.randomUUID
+    ? crypto.randomUUID()
+    : Date.now().toString(36)+
+      Math.random().toString(36).slice(2);
+
+}
+
+
+function showToast(msg){
+
+  const t =
+    document.getElementById('toast');
+
+  t.textContent = msg;
+
+  t.classList.add('show');
+
+  setTimeout(
+    ()=>t.classList.remove('show'),
+    2500
+  );
+
+}
+
+
+/* =========================================================
+   CARREGAR DADOS DO SUPABASE
+========================================================= */
+
+async function loadData(){
+
+  try{
+
+    const {
+      data,
+      error
+    } = await db
+      .from('registros')
+      .select('*')
+      .order('data',{
+        ascending:false
+      })
+      .order('created_at',{
+        ascending:false
+      });
+
+    if(error)
+      throw error;
+
+
+    registros =
+      (data || []).map(r=>({
+
+        id:r.id,
+
+        colaborador:r.colaborador,
+
+        tipo:r.tipo,
+
+        data:r.data,
+
+        horaInicial:
+          r.hora_inicial
+          ? String(r.hora_inicial).slice(0,5)
+          : '',
+
+        horaFinal:
+          r.hora_final
+          ? String(r.hora_final).slice(0,5)
+          : '',
+
+        horasTotal:
+          Number(r.horas_total || 0),
+
+        status:
+          r.status || 'pendente',
+
+        tema:r.tema || '',
+
+        ministrante:
+          r.ministrante || '',
+
+        modalidade:
+          r.modalidade || '',
+
+        instituicao:
+          r.instituicao || '',
+
+        participantes:
+          r.participantes || '',
+
+        conteudo:
+          r.conteudo || '',
+
+        acao:
+          r.acao || '',
+
+        tipoReuniao:
+          r.tipo_reuniao || '',
+
+        obs:
+          r.obs || '',
+
+        origemIda:
+          r.origem_ida || '',
+
+        destinoIda:
+          r.destino_ida || '',
+
+        idaSaida:
+          r.ida_saida
+          ? String(r.ida_saida).slice(0,5)
+          : '',
+
+        idaChegada:
+          r.ida_chegada
+          ? String(r.ida_chegada).slice(0,5)
+          : '',
+
+        origemVolta:
+          r.origem_volta || '',
+
+        destinoVolta:
+          r.destino_volta || '',
+
+        voltaSaida:
+          r.volta_saida
+          ? String(r.volta_saida).slice(0,5)
+          : '',
+
+        voltaChegada:
+          r.volta_chegada
+          ? String(r.volta_chegada).slice(0,5)
+          : '',
+
+        createdAt:
+          r.created_at
+          ? new Date(r.created_at).getTime()
+          : Date.now(),
+
+        rejectedAt:
+          r.rejected_at
+          ? new Date(r.rejected_at).getTime()
+          : null,
+
+        deletedAt:
+          r.deleted_at
+          ? new Date(r.deleted_at).getTime()
+          : null,
+
+        restoredAt:
+          r.restored_at
+          ? new Date(r.restored_at).getTime()
+          : null
+
+      }));
+
+
+    const {
+      data:colabs,
+      error:colabError
+    } = await db
+      .from('colaboradores')
+      .select('*')
+      .eq('ativo',true)
+      .order('nome',{
+        ascending:true
+      });
+
+
+    if(colabError)
+      throw colabError;
+
+
+    colaboradores =
+      (colabs || [])
+      .map(c=>c.nome);
+
+
+  }catch(error){
+
+    console.error(
+      'Erro ao carregar Supabase:',
+      error
+    );
+
+    showToast(
+      'Erro ao conectar ao Supabase'
+    );
+
+    registros = [];
+
+    colaboradores = [];
+
+  }
+
+}
+
+
+/* =========================================================
+   COLABORADORES
+========================================================= */
+
+function populaColaboradorSelects(){
+
+  const ids = [
+
+    'fColaborador',
+
+    'hFiltroColab',
+
+    'pFiltroColab',
+
+    'dFiltroColab'
+
+  ];
+
+
+  ids.forEach((id,index)=>{
+
+    const sel =
+      document.getElementById(id);
+
+    if(!sel) return;
+
+    const valorAtual =
+      sel.value;
+
+
+    if(index===0){
+
+      sel.innerHTML =
+        '<option value="">Selecione...</option>';
+
+    }else{
+
+      sel.innerHTML =
+        '<option value="">Todos</option>';
+
     }
-    if(r.voltaSaida || r.voltaChegada){
-      trechos.push(`<b>${r.origemVolta||'?'} → ${r.destinoVolta||'?'}:</b> ${r.voltaSaida||'-'} às ${r.voltaChegada||'-'}`);
-    }
-    corpo = trechos.join('<br>')+`<br><b>Obs:</b> ${r.obs||'-'}`;
-  }
-  return corpo + auditoriaHTML(r);
-}
 
-function filtraRegistros({mes, colaborador, tipo, status}){
-  return registros.filter(r=>{
-    if(mes && r.data.slice(0,7)!==mes) return false;
-    if(colaborador && !envolveColaborador(r, colaborador)) return false;
-    if(tipo && r.tipo!==tipo) return false;
-    if(status && r.status!==status) return false;
-    return true;
-  }).sort((a,b)=> b.data.localeCompare(a.data) || b.createdAt-a.createdAt);
-}
 
-function renderHistorico(){
-  const mes = document.getElementById('hFiltroMes').value;
-  const colaborador = document.getElementById('hFiltroColab').value;
-  const tipo = document.getElementById('hFiltroTipo').value;
-  const status = document.getElementById('hFiltroStatus').value;
+    colaboradores.forEach(nome=>{
 
-  const lista = filtraRegistros({mes,colaborador,tipo,status});
-  const wrap = document.getElementById('histTableWrap');
-  const summaryWrap = document.getElementById('histSummary');
+      const option =
+        document.createElement('option');
 
-  const totalHoras = lista.filter(r=>r.status!=='excluido').reduce((s,r)=>s+r.horasTotal,0);
-  const rotuloQuem = colaborador ? colaborador : 'todos os colaboradores';
-  const rotuloMes = mes ? mes.split('-').reverse().join('/') : 'todos os meses';
-  summaryWrap.innerHTML = `
-    <span class="hs-label">${rotuloQuem} · ${rotuloMes} — ${lista.length} registro(s)</span>
-    <span class="hs-value">${fmtHorasTxt(totalHoras)}</span>
-  `;
+      option.value = nome;
 
-  if(lista.length===0){
-    wrap.innerHTML = '<div class="empty-state">Nenhum registro encontrado para esse filtro.</div>';
-    return;
-  }
+      option.textContent = nome;
 
-  const STATUS_LABEL = {pendente:'Pendente', incluido:'Incluído', rejeitado:'Recusado', excluido:'Excluído'};
-  let rows = '';
-  lista.forEach(r=>{
-    const f = fmtHoras(r.horasTotal);
-    const podeAlternar = (r.status==='pendente' || r.status==='incluido');
-    const stampClick = podeAlternar ? ` onclick="toggleStatus('${r.id}')"` : '';
-    const acaoBtn = r.status==='excluido'
-      ? `<button class="icon-btn" onclick="restaurarRegistro('${r.id}')">Restaurar</button>`
-      : `<button class="icon-btn" onclick="excluirRegistro('${r.id}')">Excluir</button>`;
-    rows += `
-      <tr class="${r.status==='excluido'?'row-excluido':''}">
-        <td>${r.colaborador}</td>
-        <td>${tipoTagHTML(r.tipo)}</td>
-        <td>${r.data.split('-').reverse().join('/')}</td>
-        <td class="mono">${r.horaInicial}–${r.horaFinal}</td>
-        <td class="mono">${f.h}h${f.m}</td>
-        <td><span class="stamp ${r.status}"${stampClick}>${STATUS_LABEL[r.status]}</span></td>
-        <td><button class="icon-btn" onclick="toggleDetalhe('${r.id}')">Detalhes</button></td>
-        <td>${acaoBtn}</td>
-      </tr>
-      <tr class="row-detail" id="detail-${r.id}" style="display:none"><td colspan="8">${detalheHTML(r)}</td></tr>
-    `;
-  });
+      sel.appendChild(option);
 
-  wrap.innerHTML = `
-    <table class="hist">
-      <thead><tr>
-        <th>Colaborador</th><th>Tipo</th><th>Data</th><th>Horário</th><th>Horas</th><th>Status</th><th></th><th></th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-}
-function toggleDetalhe(id){
-  const row = document.getElementById('detail-'+id);
-  row.style.display = row.style.display==='none' ? 'table-row' : 'none';
-}
-async function toggleStatus(id){
-  const r = registros.find(x=>x.id===id);
-  r.status = r.status==='pendente' ? 'incluido' : 'pendente';
-  await saveRegistros();
-  renderHistorico();
-  renderDashboard();
-}
-async function excluirRegistro(id){
-  if(!confirm('Excluir este registro? Ele sai das listas ativas e do dashboard, mas continua no histórico para consulta.')) return;
-  const r = registros.find(x=>x.id===id);
-  r.status = 'excluido';
-  r.deletedAt = Date.now();
-  await saveRegistros();
-  renderHistorico();
-  renderPendentes();
-  renderDashboard();
-  showToast('Registro excluído');
-}
-async function restaurarRegistro(id){
-  const r = registros.find(x=>x.id===id);
-  r.status = 'pendente';
-  r.restoredAt = Date.now();
-  await saveRegistros();
-  renderHistorico();
-  renderPendentes();
-  renderDashboard();
-  showToast('Registro restaurado como pendente');
-}
-
-/* ---------------- pendentes ---------------- */
-document.getElementById('pFiltroMes').addEventListener('change', renderPendentes);
-document.getElementById('pFiltroColab').addEventListener('change', renderPendentes);
-
-function detalheTexto(r){
-  if(r.tipo==='treinamento') return `Tema: ${r.tema||'-'} | Ministrante: ${r.ministrante||'-'} | Modalidade: ${r.modalidade||'-'} | Instituição: ${r.instituicao||'-'} | Participantes: ${r.participantes||'-'}`;
-  if(r.tipo==='acao') return `Ação: ${r.acao||'-'} | Obs: ${r.obs||'-'}`;
-  if(r.tipo==='reuniao') return `Tipo: ${r.tipoReuniao||'-'} | Participantes: ${r.participantes||'-'} | Obs: ${r.obs||'-'}`;
-  if(r.tipo==='viagem'){
-    const partes = [];
-    if(r.idaSaida || r.idaChegada) partes.push(`Ida ${r.origemIda||'?'}->${r.destinoIda||'?'}: ${r.idaSaida||'-'} às ${r.idaChegada||'-'}`);
-    if(r.voltaSaida || r.voltaChegada) partes.push(`Volta ${r.origemVolta||'?'}->${r.destinoVolta||'?'}: ${r.voltaSaida||'-'} às ${r.voltaChegada||'-'}`);
-    partes.push(`Obs: ${r.obs||'-'}`);
-    return partes.join(' | ');
-  }
-  return '';
-}
-
-function renderPendentes(){
-  const mes = document.getElementById('pFiltroMes').value;
-  const colaborador = document.getElementById('pFiltroColab').value;
-  const lista = filtraRegistros({mes,colaborador,tipo:'',status:'pendente'});
-
-  const wrap = document.getElementById('pendTableWrap');
-  const summaryWrap = document.getElementById('pendSummary');
-  const totalHoras = lista.reduce((s,r)=>s+r.horasTotal,0);
-  const rotuloQuem = colaborador ? colaborador : 'todos os colaboradores';
-  const rotuloMes = mes ? mes.split('-').reverse().join('/') : 'todos os meses';
-  summaryWrap.innerHTML = `
-    <span class="hs-label">${rotuloQuem} · ${rotuloMes} — ${lista.length} registro(s) pendente(s)</span>
-    <span class="hs-value">${fmtHorasTxt(totalHoras)}</span>
-  `;
-
-  if(lista.length===0){
-    wrap.innerHTML = '<div class="empty-state">Nenhum registro pendente para esse filtro.</div>';
-    return;
-  }
-
-  let rows = '';
-  lista.forEach(r=>{
-    const f = fmtHoras(r.horasTotal);
-    rows += `
-      <tr>
-        <td class="chk-col"><input type="checkbox" class="pend-chk" data-id="${r.id}"></td>
-        <td>${r.colaborador}</td>
-        <td>${tipoTagHTML(r.tipo)}</td>
-        <td>${r.data.split('-').reverse().join('/')}</td>
-        <td class="mono">${r.horaInicial}–${r.horaFinal}</td>
-        <td class="mono">${f.h}h${f.m}</td>
-        <td><button class="icon-btn" onclick="toggleDetalhe('${r.id}')">Detalhes</button></td>
-      </tr>
-      <tr class="row-detail" id="detail-${r.id}" style="display:none"><td colspan="7">${detalheHTML(r)}</td></tr>
-    `;
-  });
-
-  wrap.innerHTML = `
-    <table class="hist">
-      <thead><tr>
-        <th class="chk-col"><input type="checkbox" id="pendSelectAll"></th>
-        <th>Colaborador</th><th>Tipo</th><th>Data</th><th>Horário</th><th>Horas</th><th></th>
-      </tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-  `;
-
-  document.getElementById('pendSelectAll').addEventListener('change', (e)=>{
-    document.querySelectorAll('.pend-chk').forEach(c=>c.checked = e.target.checked);
-  });
-}
-
-document.getElementById('btnMarcarIncluidos').addEventListener('click', async ()=>{
-  const ids = Array.from(document.querySelectorAll('.pend-chk:checked')).map(c=>c.dataset.id);
-  if(ids.length===0){ showToast('Selecione ao menos um registro'); return; }
-  registros.forEach(r=>{ if(ids.includes(r.id)) r.status = 'incluido'; });
-  await saveRegistros();
-  showToast(ids.length+' registro(s) marcado(s) como incluído(s)');
-  renderPendentes();
-  renderHistorico();
-  renderDashboard();
-});
-
-document.getElementById('btnRecusarSelecionados').addEventListener('click', async ()=>{
-  const ids = Array.from(document.querySelectorAll('.pend-chk:checked')).map(c=>c.dataset.id);
-  if(ids.length===0){ showToast('Selecione ao menos um registro'); return; }
-  if(!confirm(ids.length+' registro(s) será(ão) marcado(s) como recusado(s). Eles saem da lista de pendentes, mas continuam no histórico.')) return;
-  registros.forEach(r=>{ if(ids.includes(r.id)){ r.status = 'rejeitado'; r.rejectedAt = Date.now(); } });
-  await saveRegistros();
-  showToast(ids.length+' registro(s) recusado(s)');
-  renderPendentes();
-  renderHistorico();
-  renderDashboard();
-});
-
-document.getElementById('btnExportarCSV').addEventListener('click', ()=>{
-  const mes = document.getElementById('pFiltroMes').value;
-  const colaborador = document.getElementById('pFiltroColab').value;
-  const lista = filtraRegistros({mes,colaborador,tipo:'',status:'pendente'});
-  if(lista.length===0){ showToast('Nada para exportar'); return; }
-
-  let csv = 'Colaborador;Tipo;Data;Hora Inicial;Hora Final;Horas;Detalhes\n';
-  lista.forEach(r=>{
-    const horasDec = Math.round(r.horasTotal*100)/100;
-    const linha = [r.colaborador, TIPO_LABEL[r.tipo], r.data.split('-').reverse().join('/'), r.horaInicial, r.horaFinal, horasDec.toString().replace('.',','), detalheTexto(r).replace(/;/g,',')];
-    csv += linha.join(';')+'\n';
-  });
-
-  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'pendentes-'+(mes||'todos')+'.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-});
-
-/* ---------------- dashboard ---------------- */
-let chartInstance = null;
-document.getElementById('dFiltroMes').addEventListener('change', renderDashboard);
-document.getElementById('dFiltroColab').addEventListener('change', renderDashboard);
-
-function pessoasDoRegistro(r){
-  const pessoas = new Set([r.colaborador]);
-  if((r.tipo==='treinamento' || r.tipo==='reuniao') && r.participantes){
-    r.participantes.split(',').map(s=>s.trim()).filter(Boolean).forEach(p=>pessoas.add(p));
-  }
-  return pessoas;
-}
-function envolveColaborador(r, nome){
-  return pessoasDoRegistro(r).has(nome);
-}
-
-function renderDashboard(){
-  const mes = document.getElementById('dFiltroMes').value || currentMonth();
-  document.getElementById('dFiltroMes').value = mes;
-  const colabFiltro = document.getElementById('dFiltroColab').value;
-
-  const doMes = registros.filter(r=>r.data.slice(0,7)===mes && r.status!=='excluido');
-
-  const ctx = document.getElementById('chartColab').getContext('2d');
-  if(chartInstance) chartInstance.destroy();
-
-  if(colabFiltro){
-    /* -------- visão de um colaborador específico -------- */
-    const doColab = doMes.filter(r=>envolveColaborador(r, colabFiltro));
-    const totalHoras = doColab.reduce((s,r)=>s+r.horasTotal,0);
-    const pendentes = doColab.filter(r=>r.status==='pendente').length;
-
-    const fh = fmtHoras(totalHoras);
-    document.getElementById('kpiHoras').innerHTML = fh.h+'h <span>'+fh.m+'</span>';
-    document.getElementById('kpiRegistros').textContent = doColab.length;
-    document.getElementById('kpiPendentes').textContent = pendentes;
-
-    document.getElementById('chartLabel').textContent = 'Horas de '+colabFiltro+' por tipo';
-    document.getElementById('chartSub').textContent = 'Soma como responsável pelo registro e como participante convidado em treinamentos e reuniões.';
-
-    const porTipo = {treinamento:0, acao:0, reuniao:0, viagem:0};
-    doColab.forEach(r=>{ porTipo[r.tipo] += r.horasTotal; });
-    const tipos = Object.keys(porTipo).filter(t=>porTipo[t]>0);
-
-    chartInstance = new Chart(ctx, {
-      type:'bar',
-      data:{
-        labels: tipos.map(t=>TIPO_LABEL[t]),
-        datasets:[{
-          data: tipos.map(t=>Math.round(porTipo[t]*100)/100),
-          backgroundColor:'#D71A20',
-          borderRadius:5,
-          maxBarThickness:44
-        }]
-      },
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:(c)=> fmtHorasTxt(c.raw)}} },
-        scales:{
-          y:{ beginAtZero:true, ticks:{ font:{family:'Inter'}, color:'#726F76' }, grid:{color:'#F0EDEE'} },
-          x:{ ticks:{ font:{family:'Inter'}, color:'#201F22' }, grid:{display:false} }
-        }
-      }
     });
 
-    document.getElementById('listLabel').textContent = 'Registros de '+colabFiltro+' no mês';
-    document.getElementById('listSub').textContent = 'Clique para ver os registros completos filtrados.';
-    const listWrap = document.getElementById('dColabList');
-    if(doColab.length===0){
-      listWrap.innerHTML = '<div class="empty-state">Nenhum registro neste mês para este colaborador.</div>';
-    } else {
-      const porTipoOrdenado = tipos.sort((a,b)=>porTipo[b]-porTipo[a]);
-      listWrap.innerHTML = porTipoOrdenado.map(t=>`
-        <div class="colab-row" onclick="goToHistoricoComFiltro('${colabFiltro}','${mes}')">
-          <span class="cname">${TIPO_LABEL[t]}</span>
-          <span class="chrs">${fmtHorasTxt(porTipo[t])}</span>
-        </div>
-      `).join('');
+
+    if(valorAtual)
+      sel.value = valorAtual;
+
+  });
+
+}
+
+
+/* =========================================================
+   NOVO COLABORADOR
+========================================================= */
+
+document
+.getElementById('btnNovoColab')
+.addEventListener(
+  'click',
+  async ()=>{
+
+    const nome =
+      prompt(
+        'Nome do novo colaborador:'
+      );
+
+
+    if(!nome || !nome.trim())
+      return;
+
+
+    const nomeLimpo =
+      nome.trim();
+
+
+    try{
+
+      const {
+        error
+      } = await db
+        .from('colaboradores')
+        .insert({
+          nome:nomeLimpo,
+          ativo:true
+        });
+
+
+      if(error){
+
+        if(error.code==='23505'){
+
+          showToast(
+            'Esse colaborador já existe'
+          );
+
+          return;
+
+        }
+
+        throw error;
+
+      }
+
+
+      colaboradores.push(
+        nomeLimpo
+      );
+
+
+      colaboradores.sort(
+        (a,b)=>a.localeCompare(b)
+      );
+
+
+      populaColaboradorSelects();
+
+
+      document
+        .getElementById('fColaborador')
+        .value = nomeLimpo;
+
+
+      if(
+        tipoAtual==='treinamento' ||
+        tipoAtual==='reuniao'
+      ){
+
+        const selecionados =
+          getParticipantesSelecionados(
+            'fParticipantesChips'
+          );
+
+        criaChipsParticipantes(
+          'fParticipantesChips',
+          selecionados
+        );
+
+      }
+
+
+      renderPainelColaboradores();
+
+      showToast(
+        'Colaborador adicionado'
+      );
+
+
+    }catch(error){
+
+      console.error(error);
+
+      showToast(
+        'Erro ao adicionar colaborador'
+      );
+
     }
+
+  }
+);
+
+
+/* =========================================================
+   GERENCIAR COLABORADORES
+========================================================= */
+
+document
+.getElementById('btnGerenciarColab')
+.addEventListener(
+  'click',
+  ()=>{
+
+    const painel =
+      document.getElementById(
+        'painelColaboradores'
+      );
+
+
+    const abrindo =
+      painel.style.display==='none';
+
+
+    painel.style.display =
+      abrindo
+      ? 'block'
+      : 'none';
+
+
+    if(abrindo)
+      renderPainelColaboradores();
+
+  }
+);
+
+
+function renderPainelColaboradores(){
+
+  const painel =
+    document.getElementById(
+      'painelColaboradores'
+    );
+
+
+  if(colaboradores.length===0){
+
+    painel.innerHTML =
+      '<div class="manage-empty">Nenhum colaborador cadastrado.</div>';
+
     return;
+
   }
 
-  /* -------- visão geral, todos os colaboradores -------- */
-  const totalHoras = doMes.reduce((s,r)=>s+r.horasTotal,0);
-  const pendentes = doMes.filter(r=>r.status==='pendente').length;
 
-  const fh = fmtHoras(totalHoras);
-  document.getElementById('kpiHoras').innerHTML = fh.h+'h <span>'+fh.m+'</span>';
-  document.getElementById('kpiRegistros').textContent = doMes.length;
-  document.getElementById('kpiPendentes').textContent = pendentes;
+  painel.innerHTML =
+    colaboradores
+    .slice()
+    .sort()
+    .map(nome=>`
 
-  document.getElementById('chartLabel').textContent = 'Horas por colaborador';
-  document.getElementById('chartSub').textContent = 'Inclui horas de quem participou como convidado em treinamentos e reuniões, não só quem cadastrou o registro.';
+      <div class="manage-row">
+
+        <span>
+          ${esc(nome)}
+        </span>
+
+        <button
+          class="mrm"
+          type="button"
+          data-colab="${esc(nome)}">
+
+          Remover
+
+        </button>
+
+      </div>
+
+    `)
+    .join('');
+
+
+  painel
+    .querySelectorAll('.mrm')
+    .forEach(btn=>{
+
+      btn.addEventListener(
+        'click',
+        async ()=>{
+
+          const nome =
+            btn.dataset.colab;
+
+
+          if(!confirm(
+            `Remover "${nome}" da lista de colaboradores? Os registros existentes continuarão salvos.`
+          ))
+            return;
+
+
+          try{
+
+            const {
+              error
+            } = await db
+              .from('colaboradores')
+              .update({
+                ativo:false
+              })
+              .eq('nome',nome);
+
+
+            if(error)
+              throw error;
+
+
+            colaboradores =
+              colaboradores.filter(
+                c=>c!==nome
+              );
+
+
+            populaColaboradorSelects();
+
+            renderPainelColaboradores();
+
+
+            if(
+              tipoAtual==='treinamento' ||
+              tipoAtual==='reuniao'
+            ){
+
+              const selecionados =
+                getParticipantesSelecionados(
+                  'fParticipantesChips'
+                )
+                .filter(
+                  p=>p!==nome
+                );
+
+
+              criaChipsParticipantes(
+                'fParticipantesChips',
+                selecionados
+              );
+
+            }
+
+
+            showToast(
+              'Colaborador removido'
+            );
+
+
+          }catch(error){
+
+            console.error(error);
+
+            showToast(
+              'Erro ao remover colaborador'
+            );
+
+          }
+
+        }
+      );
+
+    });
+
+}
+
+
+/* =========================================================
+   TIPO
+========================================================= */
+
+document
+.getElementById('tipoGrid')
+.addEventListener(
+  'click',
+  e=>{
+
+    const card =
+      e.target.closest('.tipo-card');
+
+    if(!card)
+      return;
+
+
+    document
+      .querySelectorAll('.tipo-card')
+      .forEach(c=>
+        c.classList.remove('selected')
+      );
+
+
+    card.classList.add('selected');
+
+
+    tipoAtual =
+      card.dataset.tipo;
+
+
+    renderCamposEspecificos();
+
+  }
+);
+
+
+/* =========================================================
+   CAMPOS ESPECÍFICOS
+========================================================= */
+
+function renderCamposEspecificos(){
+
+  const wrap =
+    document.getElementById(
+      'camposEspecificos'
+    );
+
+
+  let html = '';
+
+
+  if(tipoAtual==='viagem'){
+
+    html += `
+
+      <div class="trecho-label">
+
+        Trecho de ida
+
+        <span class="trecho-opc">
+          (preencha este ou o de volta)
+        </span>
+
+      </div>
+
+
+      <div class="field-row">
+
+        <div class="field">
+
+          <label>Origem</label>
+
+          <input
+            type="text"
+            id="fOrigemIda"
+            placeholder="Ex: Sobral">
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Destino</label>
+
+          <input
+            type="text"
+            id="fDestinoIda"
+            placeholder="Ex: Itapipoca">
+
+        </div>
+
+      </div>
+
+
+      <div class="field-row">
+
+        <div class="field">
+
+          <label>Saída</label>
+
+          <input
+            type="time"
+            id="fIdaSaida">
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Chegada</label>
+
+          <input
+            type="time"
+            id="fIdaChegada">
+
+        </div>
+
+      </div>
+
+
+      <div class="trecho-label">
+
+        Trecho de volta
+
+        <span class="trecho-opc">
+          (opcional)
+        </span>
+
+      </div>
+
+
+      <div class="field-row">
+
+        <div class="field">
+
+          <label>Origem</label>
+
+          <input
+            type="text"
+            id="fOrigemVolta"
+            placeholder="Ex: Itapipoca">
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Destino</label>
+
+          <input
+            type="text"
+            id="fDestinoVolta"
+            placeholder="Ex: Sobral">
+
+        </div>
+
+      </div>
+
+
+      <div class="field-row">
+
+        <div class="field">
+
+          <label>Saída</label>
+
+          <input
+            type="time"
+            id="fVoltaSaida">
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Chegada</label>
+
+          <input
+            type="time"
+            id="fVoltaChegada">
+
+        </div>
+
+      </div>
+
+
+      <div class="field-row">
+
+        <div
+          class="field"
+          style="grid-column:1/-1">
+
+          <label>Observação</label>
+
+          <textarea
+            id="fObs"
+            placeholder="Detalhes da viagem">
+          </textarea>
+
+        </div>
+
+      </div>
+
+    `;
+
+  }else{
+
+    html += `
+
+      <div class="field-row">
+
+        <div class="field">
+
+          <label>Hora inicial</label>
+
+          <input
+            type="time"
+            id="fHoraInicial">
+
+        </div>
+
+
+        <div class="field">
+
+          <label>Hora final</label>
+
+          <input
+            type="time"
+            id="fHoraFinal">
+
+        </div>
+
+      </div>
+
+    `;
+
+
+    if(tipoAtual==='treinamento'){
+
+      html += `
+
+        <div class="field-row">
+
+          <div class="field">
+
+            <label>Tema</label>
+
+            <input
+              type="text"
+              id="fTema"
+              placeholder="Ex: Robôs (RPA)">
+
+          </div>
+
+
+          <div class="field">
+
+            <label>Ministrante</label>
+
+            <input
+              type="text"
+              id="fMinistrante">
+
+          </div>
+
+        </div>
+
+
+        <div class="field-row tri">
+
+          <div class="field">
+
+            <label>Modalidade</label>
+
+            <select id="fModalidade">
+
+              <option value="Presencial">
+                Presencial
+              </option>
+
+              <option value="Online">
+                Online
+              </option>
+
+            </select>
+
+          </div>
+
+
+          <div class="field">
+
+            <label>Instituição</label>
+
+            <input
+              type="text"
+              id="fInstituicao">
+
+          </div>
+
+        </div>
+
+
+        <div class="field-row">
+
+          <div
+            class="field"
+            style="grid-column:1/-1">
+
+            <label>Participantes</label>
+
+            <div
+              class="chip-select"
+              id="fParticipantesChips">
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="field-row">
+
+          <div
+            class="field"
+            style="grid-column:1/-1">
+
+            <label>
+              Conteúdo programático
+            </label>
+
+            <textarea
+              id="fConteudo">
+            </textarea>
+
+          </div>
+
+        </div>
+
+      `;
+
+    }
+
+
+    if(tipoAtual==='acao'){
+
+      html += `
+
+        <div class="field-row">
+
+          <div
+            class="field"
+            style="grid-column:1/-1">
+
+            <label>
+              Qual foi a ação
+            </label>
+
+            <input
+              type="text"
+              id="fAcao"
+              placeholder="Descreva a ação realizada">
+
+          </div>
+
+        </div>
+
+
+        <div class="field-row">
+
+          <div
+            class="field"
+            style="grid-column:1/-1">
+
+            <label>Observação</label>
+
+            <textarea
+              id="fObs">
+            </textarea>
+
+          </div>
+
+        </div>
+
+      `;
+
+    }
+
+
+    if(tipoAtual==='reuniao'){
+
+      html += `
+
+        <div class="field-row">
+
+          <div
+            class="field"
+            style="grid-column:1/-1">
+
+            <label>
+              Tipo de reunião
+            </label>
+
+            <select id="fTipoReuniao">
+
+              <option>
+                Interna
+              </option>
+
+              <option>
+                Gestão
+              </option>
+
+              <option>
+                Com cliente
+              </option>
+
+            </select>
+
+          </div>
+
+        </div>
+
+
+        <div class="field-row">
+
+          <div
+            class="field"
+            style="grid-column:1/-1">
+
+            <label>
+              Participantes
+            </label>
+
+            <div
+              class="chip-select"
+              id="fParticipantesChips">
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <div class="field-row">
+
+          <div
+            class="field"
+            style="grid-column:1/-1">
+
+            <label>Observação</label>
+
+            <textarea
+              id="fObs">
+            </textarea>
+
+          </div>
+
+        </div>
+
+      `;
+
+    }
+
+  }
+
+
+  wrap.innerHTML = html;
+
+
+  wrap
+    .querySelectorAll(
+      'input[type="time"]'
+    )
+    .forEach(el=>
+      el.addEventListener(
+        'input',
+        atualizaReadout
+      )
+    );
+
+
+  if(
+    tipoAtual==='treinamento' ||
+    tipoAtual==='reuniao'
+  ){
+
+    criaChipsParticipantes(
+      'fParticipantesChips'
+    );
+
+  }
+
+
+  atualizaReadout();
+
+}
+
+
+/* =========================================================
+   PARTICIPANTES
+========================================================= */
+
+function criaChipsParticipantes(
+  containerId,
+  preselecionados=[]
+){
+
+  const wrap =
+    document.getElementById(
+      containerId
+    );
+
+
+  if(!wrap)
+    return;
+
+
+  wrap.innerHTML =
+    colaboradores
+    .map(nome=>{
+
+      const selecionado =
+        preselecionados.includes(nome);
+
+
+      return `
+
+        <button
+          type="button"
+          class="chip ${selecionado?'selected':''}"
+          data-nome="${esc(nome)}">
+
+          ${selecionado?'✓':'+'}
+          ${esc(nome)}
+
+        </button>
+
+      `;
+
+    })
+    .join('');
+
+
+  wrap
+    .querySelectorAll('.chip')
+    .forEach(chip=>{
+
+      chip.addEventListener(
+        'click',
+        ()=>{
+
+          const selecionado =
+            chip.classList.toggle(
+              'selected'
+            );
+
+
+          chip.textContent =
+            (selecionado
+              ? '✓ '
+              : '+ ')
+            +
+            chip.dataset.nome;
+
+        }
+      );
+
+    });
+
+}
+
+
+function getParticipantesSelecionados(
+  containerId
+){
+
+  return Array.from(
+    document.querySelectorAll(
+      '#'+containerId+' .chip.selected'
+    )
+  )
+  .map(c=>c.dataset.nome);
+
+}
+
+
+/* =========================================================
+   VIAGEM
+========================================================= */
+
+function calculaHorasViagem(
+  idaSaida,
+  idaChegada,
+  voltaSaida,
+  voltaChegada
+){
+
+  let total = 0;
+
+
+  if(idaSaida && idaChegada)
+    total += diffHoras(
+      idaSaida,
+      idaChegada
+    );
+
+
+  if(voltaSaida && voltaChegada)
+    total += diffHoras(
+      voltaSaida,
+      voltaChegada
+    );
+
+
+  return total;
+
+}
+
+
+function calculaHorasAtual(){
+
+  if(tipoAtual==='viagem'){
+
+    return calculaHorasViagem(
+
+      document.getElementById(
+        'fIdaSaida'
+      )?.value,
+
+      document.getElementById(
+        'fIdaChegada'
+      )?.value,
+
+      document.getElementById(
+        'fVoltaSaida'
+      )?.value,
+
+      document.getElementById(
+        'fVoltaChegada'
+      )?.value
+
+    );
+
+  }
+
+
+  return diffHoras(
+
+    document.getElementById(
+      'fHoraInicial'
+    )?.value,
+
+    document.getElementById(
+      'fHoraFinal'
+    )?.value
+
+  );
+
+}
+
+
+function atualizaReadout(){
+
+  const dec =
+    calculaHorasAtual();
+
+
+  const f =
+    fmtHoras(dec);
+
+
+  document.getElementById(
+    'rvalue'
+  ).innerHTML =
+    `${f.h}h <span>${f.m}min</span>`;
+
+}
+
+
+/* =========================================================
+   SALVAR REGISTRO
+========================================================= */
+
+document
+.getElementById('btnSalvar')
+.addEventListener(
+  'click',
+  async ()=>{
+
+    const colaborador =
+      document.getElementById(
+        'fColaborador'
+      ).value;
+
+
+    const data =
+      document.getElementById(
+        'fData'
+      ).value;
+
+
+    if(!colaborador){
+
+      showToast(
+        'Selecione o colaborador'
+      );
+
+      return;
+
+    }
+
+
+    if(!data){
+
+      showToast(
+        'Informe a data'
+      );
+
+      return;
+
+    }
+
+
+    let horaInicial = null;
+
+    let horaFinal = null;
+
+    let extra = {};
+
+
+    if(tipoAtual==='viagem'){
+
+      const origemIda =
+        document.getElementById(
+          'fOrigemIda'
+        ).value;
+
+      const destinoIda =
+        document.getElementById(
+          'fDestinoIda'
+        ).value;
+
+      const idaSaida =
+        document.getElementById(
+          'fIdaSaida'
+        ).value;
+
+      const idaChegada =
+        document.getElementById(
+          'fIdaChegada'
+        ).value;
+
+
+      const origemVolta =
+        document.getElementById(
+          'fOrigemVolta'
+        ).value;
+
+      const destinoVolta =
+        document.getElementById(
+          'fDestinoVolta'
+        ).value;
+
+      const voltaSaida =
+        document.getElementById(
+          'fVoltaSaida'
+        ).value;
+
+      const voltaChegada =
+        document.getElementById(
+          'fVoltaChegada'
+        ).value;
+
+
+      const temIda =
+        idaSaida && idaChegada;
+
+
+      const temVolta =
+        voltaSaida && voltaChegada;
+
+
+      if(!temIda && !temVolta){
+
+        showToast(
+          'Informe pelo menos um trecho completo'
+        );
+
+        return;
+
+      }
+
+
+      horaInicial =
+        temIda
+        ? idaSaida
+        : voltaSaida;
+
+
+      horaFinal =
+        temVolta
+        ? voltaChegada
+        : idaChegada;
+
+
+      extra = {
+
+        origemIda,
+
+        destinoIda,
+
+        idaSaida,
+
+        idaChegada,
+
+        origemVolta,
+
+        destinoVolta,
+
+        voltaSaida,
+
+        voltaChegada,
+
+        obs:
+          document.getElementById(
+            'fObs'
+          ).value
+
+      };
+
+    }else{
+
+      horaInicial =
+        document.getElementById(
+          'fHoraInicial'
+        ).value;
+
+
+      horaFinal =
+        document.getElementById(
+          'fHoraFinal'
+        ).value;
+
+
+      if(!horaInicial || !horaFinal){
+
+        showToast(
+          'Informe hora inicial e final'
+        );
+
+        return;
+
+      }
+
+
+      if(tipoAtual==='treinamento'){
+
+        extra = {
+
+          tema:
+            document.getElementById(
+              'fTema'
+            ).value,
+
+          ministrante:
+            document.getElementById(
+              'fMinistrante'
+            ).value,
+
+          modalidade:
+            document.getElementById(
+              'fModalidade'
+            ).value,
+
+          instituicao:
+            document.getElementById(
+              'fInstituicao'
+            ).value,
+
+          participantes:
+            getParticipantesSelecionados(
+              'fParticipantesChips'
+            ).join(', '),
+
+          conteudo:
+            document.getElementById(
+              'fConteudo'
+            ).value
+
+        };
+
+      }
+
+
+      if(tipoAtual==='acao'){
+
+        extra = {
+
+          acao:
+            document.getElementById(
+              'fAcao'
+            ).value,
+
+          obs:
+            document.getElementById(
+              'fObs'
+            ).value
+
+        };
+
+      }
+
+
+      if(tipoAtual==='reuniao'){
+
+        extra = {
+
+          tipoReuniao:
+            document.getElementById(
+              'fTipoReuniao'
+            ).value,
+
+          participantes:
+            getParticipantesSelecionados(
+              'fParticipantesChips'
+            ).join(', '),
+
+          obs:
+            document.getElementById(
+              'fObs'
+            ).value
+
+        };
+
+      }
+
+    }
+
+
+    const horasTotal =
+      tipoAtual==='viagem'
+
+      ? calculaHorasViagem(
+          extra.idaSaida,
+          extra.idaChegada,
+          extra.voltaSaida,
+          extra.voltaChegada
+        )
+
+      : diffHoras(
+          horaInicial,
+          horaFinal
+        );
+
+
+    const registro = {
+
+      id:uid(),
+
+      colaborador,
+
+      tipo:tipoAtual,
+
+      data,
+
+      horaInicial,
+
+      horaFinal,
+
+      horasTotal,
+
+      status:'pendente',
+
+      createdAt:Date.now(),
+
+      ...extra
+
+    };
+
+
+    try{
+
+      const payload = {
+
+        id:registro.id,
+
+        colaborador:
+          registro.colaborador,
+
+        tipo:
+          registro.tipo,
+
+        data:
+          registro.data,
+
+        hora_inicial:
+          registro.horaInicial || null,
+
+        hora_final:
+          registro.horaFinal || null,
+
+        horas_total:
+          registro.horasTotal,
+
+        status:
+          'pendente',
+
+        tema:
+          registro.tema || null,
+
+        ministrante:
+          registro.ministrante || null,
+
+        modalidade:
+          registro.modalidade || null,
+
+        instituicao:
+          registro.instituicao || null,
+
+        participantes:
+          registro.participantes || null,
+
+        conteudo:
+          registro.conteudo || null,
+
+        acao:
+          registro.acao || null,
+
+        tipo_reuniao:
+          registro.tipoReuniao || null,
+
+        obs:
+          registro.obs || null,
+
+        origem_ida:
+          registro.origemIda || null,
+
+        destino_ida:
+          registro.destinoIda || null,
+
+        ida_saida:
+          registro.idaSaida || null,
+
+        ida_chegada:
+          registro.idaChegada || null,
+
+        origem_volta:
+          registro.origemVolta || null,
+
+        destino_volta:
+          registro.destinoVolta || null,
+
+        volta_saida:
+          registro.voltaSaida || null,
+
+        volta_chegada:
+          registro.voltaChegada || null
+
+      };
+
+
+      const {
+        error
+      } = await db
+        .from('registros')
+        .insert(payload);
+
+
+      if(error)
+        throw error;
+
+
+      registros.unshift(
+        registro
+      );
+
+
+      showToast(
+        'Registro salvo com sucesso'
+      );
+
+
+      document.getElementById(
+        'fData'
+      ).value = todayISO();
+
+
+      renderCamposEspecificos();
+
+
+    }catch(error){
+
+      console.error(
+        'Erro ao salvar:',
+        error
+      );
+
+      showToast(
+        'Erro ao salvar registro'
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   FILTROS
+========================================================= */
+
+document
+.getElementById('hFiltroMes')
+.addEventListener(
+  'change',
+  renderHistorico
+);
+
+document
+.getElementById('hFiltroColab')
+.addEventListener(
+  'change',
+  renderHistorico
+);
+
+document
+.getElementById('hFiltroTipo')
+.addEventListener(
+  'change',
+  renderHistorico
+);
+
+document
+.getElementById('hFiltroStatus')
+.addEventListener(
+  'change',
+  renderHistorico
+);
+
+document
+.getElementById('pFiltroMes')
+.addEventListener(
+  'change',
+  renderPendentes
+);
+
+document
+.getElementById('pFiltroColab')
+.addEventListener(
+  'change',
+  renderPendentes
+);
+
+document
+.getElementById('dFiltroMes')
+.addEventListener(
+  'change',
+  renderDashboard
+);
+
+document
+.getElementById('dFiltroColab')
+.addEventListener(
+  'change',
+  renderDashboard
+);
+
+
+/* =========================================================
+   FILTRAGEM
+========================================================= */
+
+function pessoasDoRegistro(r){
+
+  const pessoas =
+    new Set([r.colaborador]);
+
+
+  if(
+    (r.tipo==='treinamento' ||
+     r.tipo==='reuniao') &&
+    r.participantes
+  ){
+
+    r.participantes
+      .split(',')
+      .map(s=>s.trim())
+      .filter(Boolean)
+      .forEach(
+        p=>pessoas.add(p)
+      );
+
+  }
+
+
+  return pessoas;
+
+}
+
+
+function envolveColaborador(
+  r,
+  nome
+){
+
+  return pessoasDoRegistro(r)
+    .has(nome);
+
+}
+
+
+function filtraRegistros({
+  mes,
+  colaborador,
+  tipo,
+  status
+}){
+
+  return registros
+
+    .filter(r=>{
+
+      if(
+        mes &&
+        r.data.slice(0,7)!==mes
+      )
+        return false;
+
+
+      if(
+        colaborador &&
+        !envolveColaborador(
+          r,
+          colaborador
+        )
+      )
+        return false;
+
+
+      if(
+        tipo &&
+        r.tipo!==tipo
+      )
+        return false;
+
+
+      if(
+        status &&
+        r.status!==status
+      )
+        return false;
+
+
+      return true;
+
+    })
+
+    .sort(
+      (a,b)=>
+        b.data.localeCompare(a.data) ||
+        b.createdAt-a.createdAt
+    );
+
+}
+
+
+/* =========================================================
+   DETALHES
+========================================================= */
+
+function auditoriaHTML(r){
+
+  const linhas = [
+
+    `<b>Criado em:</b> ${esc(fmtDataHora(r.createdAt))}`
+
+  ];
+
+
+  if(r.rejectedAt){
+
+    linhas.push(
+      `<b>Recusado em:</b> ${esc(fmtDataHora(r.rejectedAt))}`
+    );
+
+  }
+
+
+  if(r.deletedAt){
+
+    linhas.push(
+      `<b>Excluído em:</b> ${esc(fmtDataHora(r.deletedAt))}`
+    );
+
+  }
+
+
+  if(r.restoredAt){
+
+    linhas.push(
+      `<b>Restaurado em:</b> ${esc(fmtDataHora(r.restoredAt))}`
+    );
+
+  }
+
+
+  return `
+    <div class="audit-trail">
+      ${linhas.join(' &nbsp;·&nbsp; ')}
+    </div>
+  `;
+
+}
+
+
+function detalheHTML(r){
+
+  let corpo = '';
+
+
+  if(r.tipo==='treinamento'){
+
+    corpo = `
+
+      <b>Tema:</b>
+      ${esc(r.tema)||'-'}
+
+      &nbsp;·&nbsp;
+
+      <b>Ministrante:</b>
+      ${esc(r.ministrante)||'-'}
+
+      &nbsp;·&nbsp;
+
+      <b>Modalidade:</b>
+      ${esc(r.modalidade)||'-'}
+
+      <br>
+
+      <b>Instituição:</b>
+      ${esc(r.instituicao)||'-'}
+
+      <br>
+
+      <b>Participantes:</b>
+      ${esc(r.participantes)||'-'}
+
+      <br>
+
+      <b>Conteúdo programático:</b>
+      ${esc(r.conteudo)||'-'}
+
+    `;
+
+  }
+
+
+  if(r.tipo==='acao'){
+
+    corpo = `
+
+      <b>Ação:</b>
+      ${esc(r.acao)||'-'}
+
+      <br>
+
+      <b>Obs:</b>
+      ${esc(r.obs)||'-'}
+
+    `;
+
+  }
+
+
+  if(r.tipo==='reuniao'){
+
+    corpo = `
+
+      <b>Tipo:</b>
+      ${esc(r.tipoReuniao)||'-'}
+
+      &nbsp;·&nbsp;
+
+      <b>Participantes:</b>
+      ${esc(r.participantes)||'-'}
+
+      <br>
+
+      <b>Obs:</b>
+      ${esc(r.obs)||'-'}
+
+    `;
+
+  }
+
+
+  if(r.tipo==='viagem'){
+
+    const trechos = [];
+
+
+    if(
+      r.idaSaida ||
+      r.idaChegada
+    ){
+
+      trechos.push(`
+
+        <b>
+          ${esc(r.origemIda)||'?'}
+          →
+          ${esc(r.destinoIda)||'?'}
+        :</b>
+
+        ${esc(r.idaSaida)||'-'}
+        às
+        ${esc(r.idaChegada)||'-'}
+
+      `);
+
+    }
+
+
+    if(
+      r.voltaSaida ||
+      r.voltaChegada
+    ){
+
+      trechos.push(`
+
+        <b>
+          ${esc(r.origemVolta)||'?'}
+          →
+          ${esc(r.destinoVolta)||'?'}
+        :</b>
+
+        ${esc(r.voltaSaida)||'-'}
+        às
+        ${esc(r.voltaChegada)||'-'}
+
+      `);
+
+    }
+
+
+    corpo =
+      trechos.join('<br>')+
+      `<br><b>Obs:</b> ${esc(r.obs)||'-'}`;
+
+  }
+
+
+  return corpo +
+    auditoriaHTML(r);
+
+}
+
+
+/* =========================================================
+   HISTÓRICO
+========================================================= */
+
+function renderHistorico(){
+
+  const mes =
+    document.getElementById(
+      'hFiltroMes'
+    ).value;
+
+
+  const colaborador =
+    document.getElementById(
+      'hFiltroColab'
+    ).value;
+
+
+  const tipo =
+    document.getElementById(
+      'hFiltroTipo'
+    ).value;
+
+
+  const status =
+    document.getElementById(
+      'hFiltroStatus'
+    ).value;
+
+
+  const lista =
+    filtraRegistros({
+      mes,
+      colaborador,
+      tipo,
+      status
+    });
+
+
+  const totalHoras =
+    lista
+
+      .filter(
+        r=>r.status!=='excluido'
+      )
+
+      .reduce(
+        (s,r)=>
+          s+r.horasTotal,
+        0
+      );
+
+
+  document.getElementById(
+    'histSummary'
+  ).innerHTML = `
+
+    <span class="hs-label">
+
+      ${esc(
+        colaborador ||
+        'todos os colaboradores'
+      )}
+
+      ·
+
+      ${esc(
+        mes
+        ? mes.split('-').reverse().join('/')
+        : 'todos os meses'
+      )}
+
+      —
+
+      ${lista.length}
+      registro(s)
+
+    </span>
+
+
+    <span class="hs-value">
+
+      ${fmtHorasTxt(totalHoras)}
+
+    </span>
+
+  `;
+
+
+  const wrap =
+    document.getElementById(
+      'histTableWrap'
+    );
+
+
+  if(lista.length===0){
+
+    wrap.innerHTML = `
+
+      <div class="empty-state">
+
+        Nenhum registro encontrado
+        para esse filtro.
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  const STATUS_LABEL = {
+
+    pendente:'Pendente',
+
+    incluido:'Incluído',
+
+    rejeitado:'Recusado',
+
+    excluido:'Excluído'
+
+  };
+
+
+  let rows = '';
+
+
+  lista.forEach(r=>{
+
+    const f =
+      fmtHoras(r.horasTotal);
+
+
+    const podeAlternar =
+      r.status==='pendente' ||
+      r.status==='incluido';
+
+
+    rows += `
+
+      <tr
+        class="${r.status==='excluido'
+          ? 'row-excluido'
+          : ''}">
+
+        <td>
+          ${esc(r.colaborador)}
+        </td>
+
+        <td>
+          ${tipoTagHTML(r.tipo)}
+        </td>
+
+        <td>
+          ${esc(
+            r.data
+              .split('-')
+              .reverse()
+              .join('/')
+          )}
+        </td>
+
+        <td class="mono">
+          ${esc(r.horaInicial)}
+          –
+          ${esc(r.horaFinal)}
+        </td>
+
+        <td class="mono">
+          ${f.h}h${f.m}
+        </td>
+
+        <td>
+
+          <span
+            class="stamp ${r.status}"
+            data-status-id="${esc(r.id)}"
+            style="${podeAlternar?'':'cursor:default'}">
+
+            ${STATUS_LABEL[r.status]}
+
+          </span>
+
+        </td>
+
+        <td>
+
+          <button
+            class="icon-btn"
+            data-detail-id="${esc(r.id)}">
+
+            Detalhes
+
+          </button>
+
+        </td>
+
+        <td>
+
+          ${
+            r.status==='excluido'
+
+            ?
+
+            `<button
+              class="icon-btn"
+              data-restore-id="${esc(r.id)}">
+              Restaurar
+            </button>`
+
+            :
+
+            `<button
+              class="icon-btn"
+              data-delete-id="${esc(r.id)}">
+              Excluir
+            </button>`
+          }
+
+        </td>
+
+      </tr>
+
+
+      <tr
+        class="row-detail"
+        id="detail-${esc(r.id)}"
+        style="display:none">
+
+        <td colspan="8">
+
+          ${detalheHTML(r)}
+
+        </td>
+
+      </tr>
+
+    `;
+
+  });
+
+
+  wrap.innerHTML = `
+
+    <table class="hist">
+
+      <thead>
+
+        <tr>
+
+          <th>Colaborador</th>
+          <th>Tipo</th>
+          <th>Data</th>
+          <th>Horário</th>
+          <th>Horas</th>
+          <th>Status</th>
+          <th></th>
+          <th></th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        ${rows}
+
+      </tbody>
+
+    </table>
+
+  `;
+
+
+  wrap
+    .querySelectorAll(
+      '[data-detail-id]'
+    )
+    .forEach(btn=>{
+
+      btn.addEventListener(
+        'click',
+        ()=>toggleDetalhe(
+          btn.dataset.detailId
+        )
+      );
+
+    });
+
+
+  wrap
+    .querySelectorAll(
+      '[data-status-id]'
+    )
+    .forEach(btn=>{
+
+      const r =
+        registros.find(
+          x=>x.id===btn.dataset.statusId
+        );
+
+
+      if(
+        r &&
+        (
+          r.status==='pendente' ||
+          r.status==='incluido'
+        )
+      ){
+
+        btn.addEventListener(
+          'click',
+          ()=>toggleStatus(
+            btn.dataset.statusId
+          )
+        );
+
+      }
+
+    });
+
+
+  wrap
+    .querySelectorAll(
+      '[data-delete-id]'
+    )
+    .forEach(btn=>{
+
+      btn.addEventListener(
+        'click',
+        ()=>excluirRegistro(
+          btn.dataset.deleteId
+        )
+      );
+
+    });
+
+
+  wrap
+    .querySelectorAll(
+      '[data-restore-id]'
+    )
+    .forEach(btn=>{
+
+      btn.addEventListener(
+        'click',
+        ()=>restaurarRegistro(
+          btn.dataset.restoreId
+        )
+      );
+
+    });
+
+}
+
+
+/* =========================================================
+   DETALHE
+========================================================= */
+
+function toggleDetalhe(id){
+
+  const row =
+    document.getElementById(
+      'detail-'+id
+    );
+
+
+  if(!row)
+    return;
+
+
+  row.style.display =
+    row.style.display==='none'
+    ? 'table-row'
+    : 'none';
+
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+async function toggleStatus(id){
+
+  const r =
+    registros.find(
+      x=>x.id===id
+    );
+
+
+  if(!r)
+    return;
+
+
+  const novoStatus =
+    r.status==='pendente'
+    ? 'incluido'
+    : 'pendente';
+
+
+  try{
+
+    const {
+      error
+    } = await db
+
+      .from('registros')
+
+      .update({
+        status:novoStatus
+      })
+
+      .eq('id',id);
+
+
+    if(error)
+      throw error;
+
+
+    r.status =
+      novoStatus;
+
+
+    renderHistorico();
+
+    renderPendentes();
+
+    renderDashboard();
+
+
+  }catch(error){
+
+    console.error(error);
+
+    showToast(
+      'Erro ao atualizar status'
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   EXCLUIR
+========================================================= */
+
+async function excluirRegistro(id){
+
+  if(!confirm(
+    'Excluir este registro? Ele continuará no histórico.'
+  ))
+    return;
+
+
+  try{
+
+    const agora =
+      new Date().toISOString();
+
+
+    const {
+      error
+    } = await db
+
+      .from('registros')
+
+      .update({
+
+        status:'excluido',
+
+        deleted_at:agora
+
+      })
+
+      .eq('id',id);
+
+
+    if(error)
+      throw error;
+
+
+    const r =
+      registros.find(
+        x=>x.id===id
+      );
+
+
+    if(r){
+
+      r.status =
+        'excluido';
+
+      r.deletedAt =
+        Date.now();
+
+    }
+
+
+    renderHistorico();
+
+    renderPendentes();
+
+    renderDashboard();
+
+
+    showToast(
+      'Registro excluído'
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+    showToast(
+      'Erro ao excluir registro'
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   RESTAURAR
+========================================================= */
+
+async function restaurarRegistro(id){
+
+  try{
+
+    const agora =
+      new Date().toISOString();
+
+
+    const {
+      error
+    } = await db
+
+      .from('registros')
+
+      .update({
+
+        status:'pendente',
+
+        restored_at:agora
+
+      })
+
+      .eq('id',id);
+
+
+    if(error)
+      throw error;
+
+
+    const r =
+      registros.find(
+        x=>x.id===id
+      );
+
+
+    if(r){
+
+      r.status =
+        'pendente';
+
+      r.restoredAt =
+        Date.now();
+
+    }
+
+
+    renderHistorico();
+
+    renderPendentes();
+
+    renderDashboard();
+
+
+    showToast(
+      'Registro restaurado'
+    );
+
+
+  }catch(error){
+
+    console.error(error);
+
+    showToast(
+      'Erro ao restaurar registro'
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   PENDENTES
+========================================================= */
+
+function renderPendentes(){
+
+  const mes =
+    document.getElementById(
+      'pFiltroMes'
+    ).value;
+
+
+  const colaborador =
+    document.getElementById(
+      'pFiltroColab'
+    ).value;
+
+
+  const lista =
+    filtraRegistros({
+
+      mes,
+
+      colaborador,
+
+      tipo:'',
+
+      status:'pendente'
+
+    });
+
+
+  const totalHoras =
+    lista.reduce(
+      (s,r)=>s+r.horasTotal,
+      0
+    );
+
+
+  document.getElementById(
+    'pendSummary'
+  ).innerHTML = `
+
+    <span class="hs-label">
+
+      ${esc(
+        colaborador ||
+        'todos os colaboradores'
+      )}
+
+      ·
+
+      ${esc(
+        mes
+        ? mes.split('-').reverse().join('/')
+        : 'todos os meses'
+      )}
+
+      —
+
+      ${lista.length}
+      registro(s) pendente(s)
+
+    </span>
+
+
+    <span class="hs-value">
+
+      ${fmtHorasTxt(totalHoras)}
+
+    </span>
+
+  `;
+
+
+  const wrap =
+    document.getElementById(
+      'pendTableWrap'
+    );
+
+
+  if(lista.length===0){
+
+    wrap.innerHTML = `
+
+      <div class="empty-state">
+
+        Nenhum registro pendente
+        para esse filtro.
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  let rows = '';
+
+
+  lista.forEach(r=>{
+
+    const f =
+      fmtHoras(r.horasTotal);
+
+
+    rows += `
+
+      <tr>
+
+        <td class="chk-col">
+
+          <input
+            type="checkbox"
+            class="pend-chk"
+            data-id="${esc(r.id)}">
+
+        </td>
+
+
+        <td>
+          ${esc(r.colaborador)}
+        </td>
+
+
+        <td>
+          ${tipoTagHTML(r.tipo)}
+        </td>
+
+
+        <td>
+          ${esc(
+            r.data
+              .split('-')
+              .reverse()
+              .join('/')
+          )}
+        </td>
+
+
+        <td class="mono">
+
+          ${esc(r.horaInicial)}
+          –
+          ${esc(r.horaFinal)}
+
+        </td>
+
+
+        <td class="mono">
+
+          ${f.h}h${f.m}
+
+        </td>
+
+
+        <td>
+
+          <button
+            class="icon-btn"
+            data-detail-id="${esc(r.id)}">
+
+            Detalhes
+
+          </button>
+
+        </td>
+
+      </tr>
+
+
+      <tr
+        class="row-detail"
+        id="detail-${esc(r.id)}"
+        style="display:none">
+
+        <td colspan="7">
+
+          ${detalheHTML(r)}
+
+        </td>
+
+      </tr>
+
+    `;
+
+  });
+
+
+  wrap.innerHTML = `
+
+    <table class="hist">
+
+      <thead>
+
+        <tr>
+
+          <th class="chk-col">
+
+            <input
+              type="checkbox"
+              id="pendSelectAll">
+
+          </th>
+
+          <th>Colaborador</th>
+          <th>Tipo</th>
+          <th>Data</th>
+          <th>Horário</th>
+          <th>Horas</th>
+          <th></th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        ${rows}
+
+      </tbody>
+
+    </table>
+
+  `;
+
+
+  document
+    .getElementById('pendSelectAll')
+    .addEventListener(
+      'change',
+      e=>{
+
+        document
+          .querySelectorAll(
+            '.pend-chk'
+          )
+          .forEach(
+            c=>
+              c.checked =
+              e.target.checked
+          );
+
+      }
+    );
+
+
+  wrap
+    .querySelectorAll(
+      '[data-detail-id]'
+    )
+    .forEach(btn=>{
+
+      btn.addEventListener(
+        'click',
+        ()=>toggleDetalhe(
+          btn.dataset.detailId
+        )
+      );
+
+    });
+
+}
+
+
+/* =========================================================
+   MARCAR COMO INCLUÍDO
+========================================================= */
+
+document
+.getElementById(
+  'btnMarcarIncluidos'
+)
+.addEventListener(
+  'click',
+  async ()=>{
+
+    const ids =
+      Array.from(
+        document.querySelectorAll(
+          '.pend-chk:checked'
+        )
+      )
+      .map(
+        c=>c.dataset.id
+      );
+
+
+    if(ids.length===0){
+
+      showToast(
+        'Selecione ao menos um registro'
+      );
+
+      return;
+
+    }
+
+
+    try{
+
+      const {
+        error
+      } = await db
+
+        .from('registros')
+
+        .update({
+          status:'incluido'
+        })
+
+        .in('id',ids);
+
+
+      if(error)
+        throw error;
+
+
+      registros.forEach(r=>{
+
+        if(ids.includes(r.id))
+          r.status =
+            'incluido';
+
+      });
+
+
+      showToast(
+        `${ids.length} registro(s) incluído(s)`
+      );
+
+
+      renderPendentes();
+
+      renderHistorico();
+
+      renderDashboard();
+
+
+    }catch(error){
+
+      console.error(error);
+
+      showToast(
+        'Erro ao atualizar registros'
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   RECUSAR SELECIONADOS
+========================================================= */
+
+document
+.getElementById(
+  'btnRecusarSelecionados'
+)
+.addEventListener(
+  'click',
+  async ()=>{
+
+    const ids =
+      Array.from(
+        document.querySelectorAll(
+          '.pend-chk:checked'
+        )
+      )
+      .map(
+        c=>c.dataset.id
+      );
+
+
+    if(ids.length===0){
+
+      showToast(
+        'Selecione ao menos um registro'
+      );
+
+      return;
+
+    }
+
+
+    if(!confirm(
+      `${ids.length} registro(s) será(ão) marcado(s) como recusado(s).`
+    ))
+      return;
+
+
+    try{
+
+      const agora =
+        new Date().toISOString();
+
+
+      const {
+        error
+      } = await db
+
+        .from('registros')
+
+        .update({
+
+          status:'rejeitado',
+
+          rejected_at:agora
+
+        })
+
+        .in('id',ids);
+
+
+      if(error)
+        throw error;
+
+
+      registros.forEach(r=>{
+
+        if(ids.includes(r.id)){
+
+          r.status =
+            'rejeitado';
+
+          r.rejectedAt =
+            Date.now();
+
+        }
+
+      });
+
+
+      showToast(
+        `${ids.length} registro(s) recusado(s)`
+      );
+
+
+      renderPendentes();
+
+      renderHistorico();
+
+      renderDashboard();
+
+
+    }catch(error){
+
+      console.error(error);
+
+      showToast(
+        'Erro ao recusar registros'
+      );
+
+    }
+
+  }
+);
+
+
+/* =========================================================
+   EXPORTAR CSV
+========================================================= */
+
+document
+.getElementById(
+  'btnExportarCSV'
+)
+.addEventListener(
+  'click',
+  ()=>{
+
+    const mes =
+      document.getElementById(
+        'pFiltroMes'
+      ).value;
+
+
+    const colaborador =
+      document.getElementById(
+        'pFiltroColab'
+      ).value;
+
+
+    const lista =
+      filtraRegistros({
+
+        mes,
+
+        colaborador,
+
+        tipo:'',
+
+        status:'pendente'
+
+      });
+
+
+    if(lista.length===0){
+
+      showToast(
+        'Nada para exportar'
+      );
+
+      return;
+
+    }
+
+
+    let csv =
+      'Colaborador;Tipo;Data;Hora Inicial;Hora Final;Horas;Detalhes\n';
+
+
+    lista.forEach(r=>{
+
+      const horas =
+        Math.round(
+          r.horasTotal*100
+        )/100;
+
+
+      let detalhe = '';
+
+
+      if(r.tipo==='treinamento'){
+
+        detalhe =
+          `Tema: ${r.tema||'-'} | `+
+          `Ministrante: ${r.ministrante||'-'} | `+
+          `Participantes: ${r.participantes||'-'}`;
+
+      }
+
+
+      if(r.tipo==='acao'){
+
+        detalhe =
+          `Ação: ${r.acao||'-'} | `+
+          `Obs: ${r.obs||'-'}`;
+
+      }
+
+
+      if(r.tipo==='reuniao'){
+
+        detalhe =
+          `Tipo: ${r.tipoReuniao||'-'} | `+
+          `Participantes: ${r.participantes||'-'}`;
+
+      }
+
+
+      if(r.tipo==='viagem'){
+
+        detalhe =
+          `Ida: ${r.origemIda||'-'} → ${r.destinoIda||'-'} | `+
+          `Volta: ${r.origemVolta||'-'} → ${r.destinoVolta||'-'}`;
+
+      }
+
+
+      const linha = [
+
+        r.colaborador,
+
+        TIPO_LABEL[r.tipo],
+
+        r.data
+          .split('-')
+          .reverse()
+          .join('/'),
+
+        r.horaInicial,
+
+        r.horaFinal,
+
+        String(horas)
+          .replace('.',','),
+
+        detalhe
+          .replace(/;/g,',')
+
+      ];
+
+
+      csv +=
+        linha.join(';')+
+        '\n';
+
+    });
+
+
+    const blob =
+      new Blob(
+        ['\ufeff'+csv],
+        {
+          type:
+            'text/csv;charset=utf-8;'
+        }
+      );
+
+
+    const url =
+      URL.createObjectURL(blob);
+
+
+    const a =
+      document.createElement('a');
+
+
+    a.href = url;
+
+
+    a.download =
+      `pendentes-${mes||'todos'}.csv`;
+
+
+    document.body.appendChild(a);
+
+
+    a.click();
+
+
+    document.body.removeChild(a);
+
+
+    URL.revokeObjectURL(url);
+
+  }
+);
+
+
+/* =========================================================
+   DASHBOARD
+========================================================= */
+
+function renderDashboard(){
+
+  const mes =
+    document.getElementById(
+      'dFiltroMes'
+    ).value ||
+    currentMonth();
+
+
+  document.getElementById(
+    'dFiltroMes'
+  ).value = mes;
+
+
+  const colabFiltro =
+    document.getElementById(
+      'dFiltroColab'
+    ).value;
+
+
+  const doMes =
+    registros.filter(
+      r=>
+        r.data.slice(0,7)===mes &&
+        r.status!=='excluido'
+    );
+
+
+  const ctx =
+    document
+      .getElementById(
+        'chartColab'
+      )
+      .getContext('2d');
+
+
+  if(chartInstance){
+
+    chartInstance.destroy();
+
+    chartInstance = null;
+
+  }
+
+
+  if(colabFiltro){
+
+    const doColab =
+      doMes.filter(
+        r=>
+          envolveColaborador(
+            r,
+            colabFiltro
+          )
+      );
+
+
+    const totalHoras =
+      doColab.reduce(
+        (s,r)=>
+          s+r.horasTotal,
+        0
+      );
+
+
+    const pendentes =
+      doColab.filter(
+        r=>r.status==='pendente'
+      ).length;
+
+
+    const fh =
+      fmtHoras(totalHoras);
+
+
+    document.getElementById(
+      'kpiHoras'
+    ).innerHTML =
+      `${fh.h}h <span>${fh.m}</span>`;
+
+
+    document.getElementById(
+      'kpiRegistros'
+    ).textContent =
+      doColab.length;
+
+
+    document.getElementById(
+      'kpiPendentes'
+    ).textContent =
+      pendentes;
+
+
+    document.getElementById(
+      'chartLabel'
+    ).textContent =
+      `Horas de ${colabFiltro} por tipo`;
+
+
+    document.getElementById(
+      'chartSub'
+    ).textContent =
+      'Soma como responsável pelo registro e como participante convidado.';
+
+
+    const porTipo = {
+
+      treinamento:0,
+
+      acao:0,
+
+      reuniao:0,
+
+      viagem:0
+
+    };
+
+
+    doColab.forEach(r=>{
+
+      porTipo[r.tipo] +=
+        r.horasTotal;
+
+    });
+
+
+    const tipos =
+      Object.keys(porTipo)
+        .filter(
+          t=>porTipo[t]>0
+        );
+
+
+    chartInstance =
+      new Chart(
+        ctx,
+        {
+
+          type:'bar',
+
+          data:{
+
+            labels:
+              tipos.map(
+                t=>TIPO_LABEL[t]
+              ),
+
+            datasets:[{
+
+              data:
+                tipos.map(
+                  t=>
+                    Math.round(
+                      porTipo[t]*100
+                    )/100
+                ),
+
+              backgroundColor:
+                '#D71A20',
+
+              borderRadius:5,
+
+              maxBarThickness:44
+
+            }]
+
+          },
+
+          options:{
+
+            responsive:true,
+
+            maintainAspectRatio:false,
+
+            plugins:{
+
+              legend:{
+                display:false
+              },
+
+              tooltip:{
+
+                callbacks:{
+
+                  label:
+                    c=>
+                      fmtHorasTxt(
+                        c.raw
+                      )
+
+                }
+
+              }
+
+            },
+
+            scales:{
+
+              y:{
+
+                beginAtZero:true,
+
+                ticks:{
+                  color:'#726F76'
+                },
+
+                grid:{
+                  color:'#F0EDEE'
+                }
+
+              },
+
+              x:{
+
+                ticks:{
+                  color:'#201F22'
+                },
+
+                grid:{
+                  display:false
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+      );
+
+
+    document.getElementById(
+      'listLabel'
+    ).textContent =
+      `Registros de ${colabFiltro} no mês`;
+
+
+    document.getElementById(
+      'listSub'
+    ).textContent =
+      'Clique para abrir os registros completos.';
+
+
+    const listWrap =
+      document.getElementById(
+        'dColabList'
+      );
+
+
+    if(doColab.length===0){
+
+      listWrap.innerHTML =
+        '<div class="empty-state">Nenhum registro neste mês para este colaborador.</div>';
+
+    }else{
+
+      const tiposOrdenados =
+        tipos.sort(
+          (a,b)=>
+            porTipo[b]-porTipo[a]
+        );
+
+
+      listWrap.innerHTML =
+        tiposOrdenados
+          .map(t=>`
+
+            <div
+              class="colab-row"
+              data-dashboard-colab="${esc(colabFiltro)}">
+
+              <span class="cname">
+
+                ${TIPO_LABEL[t]}
+
+              </span>
+
+              <span class="chrs">
+
+                ${fmtHorasTxt(
+                  porTipo[t]
+                )}
+
+              </span>
+
+            </div>
+
+          `)
+          .join('');
+
+
+      listWrap
+        .querySelectorAll(
+          '[data-dashboard-colab]'
+        )
+        .forEach(row=>{
+
+          row.addEventListener(
+            'click',
+            ()=>{
+
+              document
+                .querySelector(
+                  '.tab[data-tab="historico"]'
+                )
+                .click();
+
+
+              document.getElementById(
+                'hFiltroColab'
+              ).value =
+                colabFiltro;
+
+
+              document.getElementById(
+                'hFiltroMes'
+              ).value =
+                mes;
+
+
+              renderHistorico();
+
+            }
+          );
+
+        });
+
+    }
+
+
+    return;
+
+  }
+
+
+  /* =======================================================
+     DASHBOARD GERAL
+  ======================================================= */
+
+  const totalHoras =
+    doMes.reduce(
+      (s,r)=>
+        s+r.horasTotal,
+      0
+    );
+
+
+  const pendentes =
+    doMes.filter(
+      r=>r.status==='pendente'
+    ).length;
+
+
+  const fh =
+    fmtHoras(totalHoras);
+
+
+  document.getElementById(
+    'kpiHoras'
+  ).innerHTML =
+    `${fh.h}h <span>${fh.m}</span>`;
+
+
+  document.getElementById(
+    'kpiRegistros'
+  ).textContent =
+    doMes.length;
+
+
+  document.getElementById(
+    'kpiPendentes'
+  ).textContent =
+    pendentes;
+
+
+  document.getElementById(
+    'chartLabel'
+  ).textContent =
+    'Horas por colaborador';
+
+
+  document.getElementById(
+    'chartSub'
+  ).textContent =
+    'Inclui horas de quem participou como convidado em treinamentos e reuniões.';
+
 
   const porColab = {};
+
+
   doMes.forEach(r=>{
-    pessoasDoRegistro(r).forEach(p=>{ porColab[p] = (porColab[p]||0) + r.horasTotal; });
-  });
-  const nomes = Object.keys(porColab).sort((a,b)=>porColab[b]-porColab[a]);
 
-  chartInstance = new Chart(ctx, {
-    type:'bar',
-    data:{
-      labels: nomes,
-      datasets:[{
-        data: nomes.map(n=>Math.round(porColab[n]*100)/100),
-        backgroundColor:'#D71A20',
-        borderRadius:5,
-        maxBarThickness:44
-      }]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false},
-        tooltip:{callbacks:{label:(c)=> fmtHorasTxt(c.raw)}} },
-      scales:{
-        y:{ beginAtZero:true, ticks:{ font:{family:'Inter'}, color:'#726F76' }, grid:{color:'#F0EDEE'} },
-        x:{ ticks:{ font:{family:'Inter'}, color:'#201F22' }, grid:{display:false} }
+    pessoasDoRegistro(r)
+      .forEach(p=>{
+
+        porColab[p] =
+          (porColab[p]||0)
+          +
+          r.horasTotal;
+
+      });
+
+  });
+
+
+  const nomes =
+    Object.keys(porColab)
+      .sort(
+        (a,b)=>
+          porColab[b]-porColab[a]
+      );
+
+
+  chartInstance =
+    new Chart(
+      ctx,
+      {
+
+        type:'bar',
+
+        data:{
+
+          labels:nomes,
+
+          datasets:[{
+
+            data:
+              nomes.map(
+                n=>
+                  Math.round(
+                    porColab[n]*100
+                  )/100
+              ),
+
+            backgroundColor:
+              '#D71A20',
+
+            borderRadius:5,
+
+            maxBarThickness:44
+
+          }]
+
+        },
+
+        options:{
+
+          responsive:true,
+
+          maintainAspectRatio:false,
+
+          plugins:{
+
+            legend:{
+              display:false
+            },
+
+            tooltip:{
+
+              callbacks:{
+
+                label:
+                  c=>
+                    fmtHorasTxt(
+                      c.raw
+                    )
+
+              }
+
+            }
+
+          },
+
+          scales:{
+
+            y:{
+
+              beginAtZero:true,
+
+              ticks:{
+                color:'#726F76'
+              },
+
+              grid:{
+                color:'#F0EDEE'
+              }
+
+            },
+
+            x:{
+
+              ticks:{
+                color:'#201F22'
+              },
+
+              grid:{
+                display:false
+              }
+
+            }
+
+          }
+
+        }
+
       }
-    }
-  });
+    );
 
-  document.getElementById('listLabel').textContent = 'Colaboradores no mês';
-  document.getElementById('listSub').textContent = 'Clique em um colaborador para ver os registros detalhados dele.';
-  const listWrap = document.getElementById('dColabList');
+
+  document.getElementById(
+    'listLabel'
+  ).textContent =
+    'Colaboradores no mês';
+
+
+  document.getElementById(
+    'listSub'
+  ).textContent =
+    'Clique em um colaborador para ver os registros detalhados.';
+
+
+  const listWrap =
+    document.getElementById(
+      'dColabList'
+    );
+
+
   if(nomes.length===0){
-    listWrap.innerHTML = '<div class="empty-state">Nenhum registro neste mês.</div>';
-  } else {
-    listWrap.innerHTML = nomes.map(n=>`
-      <div class="colab-row" onclick="goToHistoricoComFiltro('${n}','${mes}')">
-        <span class="cname">${n}</span>
-        <span class="chrs">${fmtHorasTxt(porColab[n])}</span>
-      </div>
-    `).join('');
+
+    listWrap.innerHTML =
+      '<div class="empty-state">Nenhum registro neste mês.</div>';
+
+    return;
+
   }
+
+
+  listWrap.innerHTML =
+    nomes.map(n=>`
+
+      <div
+        class="colab-row"
+        data-dashboard-colab="${esc(n)}">
+
+        <span class="cname">
+
+          ${esc(n)}
+
+        </span>
+
+        <span class="chrs">
+
+          ${fmtHorasTxt(
+            porColab[n]
+          )}
+
+        </span>
+
+      </div>
+
+    `)
+    .join('');
+
+
+  listWrap
+    .querySelectorAll(
+      '[data-dashboard-colab]'
+    )
+    .forEach(row=>{
+
+      row.addEventListener(
+        'click',
+        ()=>{
+
+          const nome =
+            row.dataset.dashboardColab;
+
+
+          document
+            .querySelector(
+              '.tab[data-tab="historico"]'
+            )
+            .click();
+
+
+          document.getElementById(
+            'hFiltroColab'
+          ).value =
+            nome;
+
+
+          document.getElementById(
+            'hFiltroMes'
+          ).value =
+            mes;
+
+
+          renderHistorico();
+
+        }
+      );
+
+    });
+
 }
 
-/* ---------------- init ---------------- */
+
+/* =========================================================
+   ABAS
+========================================================= */
+
+document
+.querySelectorAll('.tab')
+.forEach(btn=>{
+
+  btn.addEventListener(
+    'click',
+    ()=>{
+
+      document
+        .querySelectorAll('.tab')
+        .forEach(
+          b=>b.classList.remove('active')
+        );
+
+
+      document
+        .querySelectorAll('.tab-panel')
+        .forEach(
+          p=>p.classList.remove('active')
+        );
+
+
+      btn.classList.add('active');
+
+
+      document
+        .getElementById(
+          'tab-'+btn.dataset.tab
+        )
+        .classList.add('active');
+
+
+      if(
+        btn.dataset.tab==='historico'
+      )
+        renderHistorico();
+
+
+      if(
+        btn.dataset.tab==='pendentes'
+      )
+        renderPendentes();
+
+
+      if(
+        btn.dataset.tab==='dashboard'
+      )
+        renderDashboard();
+
+    }
+  );
+
+});
+
+
+/* =========================================================
+   INICIALIZAÇÃO
+========================================================= */
+
 async function init(){
+
+  document.getElementById(
+    'fData'
+  ).value =
+    todayISO();
+
+
+  document.getElementById(
+    'dFiltroMes'
+  ).value =
+    currentMonth();
+
+
   await loadData();
+
+
   populaColaboradorSelects();
-  document.getElementById('fData').value = todayISO();
-  document.getElementById('dFiltroMes').value = currentMonth();
+
+
   renderCamposEspecificos();
+
+
   renderDashboard();
+
 }
+
+
 init();
+
 </script>
+
 </body>
 </html>
