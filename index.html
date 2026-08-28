@@ -2666,13 +2666,23 @@ function renderCamposEspecificos(){
             class="field"
             style="grid-column:1/-1">
 
-            <label>
-              Conteúdo programático
-            </label>
+<div class="field-row">
+  <div
+    class="field"
+    style="grid-column:1/-1">
 
-            <textarea
-              id="fConteudo">
-            </textarea>
+    <label>
+      Conteúdo programático
+      <span style="color:#D71A20">*</span>
+    </label>
+
+    <textarea
+      id="fConteudo"
+      required
+      placeholder="Informe o conteúdo abordado no treinamento..."></textarea>
+
+  </div>
+</div>
 
           </div>
 
@@ -3195,9 +3205,28 @@ document
       }
 
 
-      if(tipoAtual==='treinamento'){
+if(tipoAtual==='treinamento'){
 
-        extra = {
+  const conteudoProgramatico =
+    document
+      .getElementById('fConteudo')
+      .value
+      .trim();
+
+  if(!conteudoProgramatico){
+
+    showToast(
+      'O conteúdo programático é obrigatório.'
+    );
+
+    document
+      .getElementById('fConteudo')
+      .focus();
+
+    return;
+  }
+
+  extra = {
 
           tema:
             document.getElementById(
@@ -3225,9 +3254,7 @@ document
             ).join(', '),
 
           conteudo:
-            document.getElementById(
-              'fConteudo'
-            ).value
+  conteudoProgramatico
 
         };
 
@@ -5060,12 +5087,20 @@ function renderDashboard(){
     ).value;
 
 
-  const doMes =
-    registros.filter(
-      r=>
-        r.data.slice(0,7)===mes &&
-        r.status!=='excluido'
-    );
+  // Todos os registros válidos do mês
+const registrosMes =
+  registros.filter(
+    r=>
+      r.data.slice(0,7)===mes &&
+      r.status!=='excluido'
+  );
+
+// Somente registros aceitos e incluídos na planilha
+const doMes =
+  registrosMes.filter(
+    r=>
+      r.status==='incluido'
+  );
 
 
   const ctx =
@@ -5388,11 +5423,10 @@ function renderDashboard(){
     );
 
 
-  const pendentes =
-    doMes.filter(
-      r=>r.status==='pendente'
-    ).length;
-
+const pendentes =
+  registrosMes.filter(
+    r=>r.status==='pendente'
+  ).length;
 
   const fh =
     fmtHoras(totalHoras);
