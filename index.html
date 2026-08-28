@@ -22,7 +22,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 
 
 <style>
@@ -1531,11 +1531,92 @@ const SUPABASE_HEADERS = {
 };
 
 const { createClient } = supabase;
-
 const db = createClient(
   SUPABASE_URL,
   SUPABASE_ANON_KEY
 );
+// ======================================
+// USUÁRIO LOGADO
+// ======================================
+
+let usuarioAtual = null;
+let perfilAtual = null;
+
+async function carregarUsuarioLogado() {
+
+  const {
+    data: { user },
+    error: userError
+  } = await db.auth.getUser();
+
+  if (userError || !user) {
+    return;
+  }
+
+  usuarioAtual = user;
+
+  const { data, error } = await db
+    .from('perfis')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (error || !data) {
+
+    showToast(
+      'Perfil do usuário não encontrado.'
+    );
+
+    await db.auth.signOut();
+
+    return;
+  }
+
+  perfilAtual = data;
+
+  console.log(
+    'Usuário logado:',
+    usuarioAtual.email
+  );
+
+  console.log(
+    'Perfil:',
+    perfilAtual.perfil
+  );
+}
+
+async function fazerLogin(){
+
+  const email =
+    document.getElementById('loginEmail').value.trim();
+
+  const senha =
+    document.getElementById('loginSenha').value;
+
+  if(!email || !senha){
+
+    showToast('Informe e-mail e senha.');
+
+    return;
+  }
+
+  const { data, error } =
+    await db.auth.signInWithPassword({
+      email,
+      password: senha
+    });
+
+  if(error){
+
+    showToast(
+      'E-mail ou senha incorretos.'
+    );
+
+    return;
+  }
+
+  await carregarUsuarioLogado();
+}
 
 
 /* =========================================================
@@ -5140,10 +5221,15 @@ const doMes =
       );
 
 
-    const pendentes =
-      doColab.filter(
-        r=>r.status==='pendente'
-      ).length;
+const pendentes =
+  registrosMes.filter(
+    r=>
+      r.status==='pendente' &&
+      envolveColaborador(
+        r,
+        colabFiltro
+      )
+  ).length;
 
 
     const fh =
