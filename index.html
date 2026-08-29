@@ -1759,68 +1759,145 @@ let perfilAtual = null;
 
 async function carregarUsuarioLogado() {
 
-  const {
-    data: { user },
-    error: userError
-  } = await db.auth.getUser();
+  const erro =
+    document.getElementById('loginErro');
 
-  if (userError || !user) {
+  try {
 
-    usuarioAtual = null;
-    perfilAtual = null;
+    const {
+      data: { user },
+      error: userError
+    } = await db.auth.getUser();
 
-    mostrarLogin();
+    console.log('Resultado do Auth:', user);
 
-    return false;
-  }
+    if (userError) {
 
-  usuarioAtual = user;
+      console.error(
+        'Erro ao verificar usuário:',
+        userError
+      );
 
-  const { data, error } = await db
-    .from('perfis')
-    .select('*')
-    .eq('id', user.id)
-    .single();
+      if (erro) {
+        erro.textContent =
+          'Erro ao verificar o login: ' +
+          userError.message;
+      }
 
-  if (
-    error ||
-    !data ||
-    data.ativo === false ||
-    !['gestora','tecnico'].includes(data.perfil)
-  ) {
+      return false;
+    }
 
-    showToast(
-      'Perfil do usuário não encontrado ou inativo.'
+    if (!user) {
+
+      usuarioAtual = null;
+      perfilAtual = null;
+
+      mostrarLogin();
+
+      return false;
+    }
+
+    usuarioAtual = user;
+
+    console.log(
+      'ID do usuário:',
+      user.id
     );
 
-    await db.auth.signOut();
+    const {
+      data: perfil,
+      error: perfilError
+    } = await db
+      .from('perfis')
+      .select('*')
+      .eq('id', user.id)
+      .single();
 
-    usuarioAtual = null;
-    perfilAtual = null;
+    console.log(
+      'Perfil encontrado:',
+      perfil
+    );
 
-    mostrarLogin();
+    if (perfilError) {
+
+      console.error(
+        'Erro ao buscar perfil:',
+        perfilError
+      );
+
+      if (erro) {
+        erro.textContent =
+          'Erro ao buscar seu perfil: ' +
+          perfilError.message;
+      }
+
+      return false;
+    }
+
+    if (!perfil) {
+
+      if (erro) {
+        erro.textContent =
+          'Seu usuário existe, mas não possui um perfil cadastrado.';
+      }
+
+      return false;
+    }
+
+    if (
+      perfil.ativo === false ||
+      !['gestora', 'tecnico'].includes(
+        perfil.perfil
+      )
+    ) {
+
+      if (erro) {
+        erro.textContent =
+          'Seu perfil não está autorizado a acessar o sistema.';
+      }
+
+      await db.auth.signOut();
+
+      usuarioAtual = null;
+      perfilAtual = null;
+
+      return false;
+    }
+
+    perfilAtual = perfil;
+
+    console.log(
+      'Usuário logado:',
+      usuarioAtual.email
+    );
+
+    console.log(
+      'Perfil:',
+      perfilAtual.perfil
+    );
+
+    aplicarPermissoes();
+
+    esconderLogin();
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      'Erro inesperado no login:',
+      error
+    );
+
+    if (erro) {
+      erro.textContent =
+        'Erro inesperado: ' +
+        error.message;
+    }
 
     return false;
   }
-
-  perfilAtual = data;
-
-  console.log(
-    'Usuário logado:',
-    usuarioAtual.email
-  );
-
-  console.log(
-    'Perfil:',
-    perfilAtual.perfil
-  );
-
-  aplicarPermissoes();
-  esconderLogin();
-
-  return true;
 }
-
 
 function mostrarLogin(){
 
