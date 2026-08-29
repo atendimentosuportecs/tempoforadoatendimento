@@ -846,6 +846,143 @@ input[type="checkbox"]{
 
 }
 
+
+/* =========================================================
+   LOGIN / AUTENTICAÇÃO
+========================================================= */
+
+.login-screen{
+  position:fixed;
+  inset:0;
+  background:#F7F7F8;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:99999;
+}
+
+.login-box{
+  width:min(420px, calc(100% - 40px));
+  background:#FFFFFF;
+  border-radius:20px;
+  padding:40px;
+  box-shadow:0 20px 60px rgba(0,0,0,.12);
+  border:1px solid #E8E7E9;
+}
+
+.login-logo{
+  font-size:22px;
+  font-weight:800;
+  color:#D71A20;
+  margin-bottom:25px;
+}
+
+.login-box h1{
+  margin:0 0 8px;
+  font-size:28px;
+  color:#201F22;
+}
+
+.login-box p{
+  margin:0 0 28px;
+  color:#726F76;
+}
+
+.login-field{
+  margin-bottom:18px;
+}
+
+.login-field label{
+  display:block;
+  margin-bottom:7px;
+  font-weight:600;
+  color:#201F22;
+}
+
+.login-field input{
+  width:100%;
+  box-sizing:border-box;
+  padding:13px 14px;
+  border:1px solid #D9D7DA;
+  border-radius:10px;
+  font-size:15px;
+  outline:none;
+}
+
+.login-field input:focus{
+  border-color:#D71A20;
+}
+
+.login-button{
+  width:100%;
+  border:0;
+  border-radius:10px;
+  padding:14px;
+  background:#D71A20;
+  color:#FFFFFF;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.login-button:hover{
+  opacity:.92;
+}
+
+.login-button:disabled{
+  opacity:.65;
+  cursor:wait;
+}
+
+.login-error{
+  margin-top:15px;
+  color:#D71A20;
+  font-size:14px;
+  text-align:center;
+  min-height:20px;
+}
+
+.session-area{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-left:auto;
+}
+
+.session-user{
+  font-size:13px;
+  color:#726F76;
+  white-space:nowrap;
+}
+
+.session-user strong{
+  color:#201F22;
+}
+
+.logout-button{
+  border:1px solid var(--line);
+  background:#FFFFFF;
+  color:#201F22;
+  border-radius:9px;
+  padding:8px 12px;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.logout-button:hover{
+  border-color:#D71A20;
+  color:#D71A20;
+}
+
+@media (max-width:900px){
+  .session-area{
+    width:100%;
+    margin-left:0;
+    justify-content:flex-end;
+  }
+}
+
 </style>
 
 </head>
@@ -853,6 +990,71 @@ input[type="checkbox"]{
 
 <body>
 
+
+
+<!-- =======================================================
+     TELA DE LOGIN
+======================================================= -->
+
+<div id="telaLogin" class="login-screen">
+
+  <div class="login-box">
+
+    <div class="login-logo">
+      TEMPO FORA
+    </div>
+
+    <h1>Acesso ao sistema</h1>
+
+    <p>
+      Entre com seu e-mail e senha.
+    </p>
+
+    <div class="login-field">
+
+      <label for="loginEmail">
+        E-mail
+      </label>
+
+      <input
+        type="email"
+        id="loginEmail"
+        placeholder="Digite seu e-mail"
+        autocomplete="username">
+
+    </div>
+
+    <div class="login-field">
+
+      <label for="loginSenha">
+        Senha
+      </label>
+
+      <input
+        type="password"
+        id="loginSenha"
+        placeholder="Digite sua senha"
+        autocomplete="current-password">
+
+    </div>
+
+    <button
+      type="button"
+      class="login-button"
+      onclick="fazerLogin()">
+
+      Entrar
+
+    </button>
+
+    <div
+      id="loginErro"
+      class="login-error">
+    </div>
+
+  </div>
+
+</div>
 
 <header class="topbar">
 
@@ -880,6 +1082,19 @@ input[type="checkbox"]{
     </button>
 
   </nav>
+
+  <div class="session-area">
+
+    <div id="sessionUser" class="session-user"></div>
+
+    <button
+      type="button"
+      class="logout-button"
+      onclick="sair()">
+      Sair
+    </button>
+
+  </div>
 
 </header>
 
@@ -1550,7 +1765,13 @@ async function carregarUsuarioLogado() {
   } = await db.auth.getUser();
 
   if (userError || !user) {
-    return;
+
+    usuarioAtual = null;
+    perfilAtual = null;
+
+    mostrarLogin();
+
+    return false;
   }
 
   usuarioAtual = user;
@@ -1561,15 +1782,25 @@ async function carregarUsuarioLogado() {
     .eq('id', user.id)
     .single();
 
-  if (error || !data) {
+  if (
+    error ||
+    !data ||
+    data.ativo === false ||
+    !['gestora','tecnico'].includes(data.perfil)
+  ) {
 
     showToast(
-      'Perfil do usuário não encontrado.'
+      'Perfil do usuário não encontrado ou inativo.'
     );
 
     await db.auth.signOut();
 
-    return;
+    usuarioAtual = null;
+    perfilAtual = null;
+
+    mostrarLogin();
+
+    return false;
   }
 
   perfilAtual = data;
@@ -1583,39 +1814,230 @@ async function carregarUsuarioLogado() {
     'Perfil:',
     perfilAtual.perfil
   );
+
+  aplicarPermissoes();
+  esconderLogin();
+
+  return true;
 }
+
+
+function mostrarLogin(){
+
+  const tela =
+    document.getElementById(
+      'telaLogin'
+    );
+
+  if(tela){
+
+    tela.style.display = 'flex';
+
+  }
+
+}
+
+
+function esconderLogin(){
+
+  const tela =
+    document.getElementById(
+      'telaLogin'
+    );
+
+  if(tela){
+
+    tela.style.display = 'none';
+
+  }
+
+}
+
+
+function aplicarPermissoes(){
+
+  const abaGestao =
+    document.querySelector(
+      '[data-tab="pendentes"]'
+    );
+
+  const painelGestao =
+    document.getElementById(
+      'tab-pendentes'
+    );
+
+  const sessionUser =
+    document.getElementById(
+      'sessionUser'
+    );
+
+  const ehGestora =
+    perfilAtual?.perfil === 'gestora';
+
+  if(abaGestao){
+
+    abaGestao.style.display =
+      ehGestora ? '' : 'none';
+
+  }
+
+  if(painelGestao){
+
+    painelGestao.style.display =
+      ehGestora ? '' : 'none';
+
+  }
+
+  if(sessionUser && usuarioAtual){
+
+    const nome =
+      perfilAtual?.nome ||
+      usuarioAtual.email;
+
+    const perfil =
+      ehGestora
+      ? 'Gestora'
+      : 'Técnico';
+
+    sessionUser.innerHTML =
+      `<strong>${esc(nome)}</strong> · ${perfil}`;
+
+  }
+
+}
+
+
+function somenteGestora(){
+
+  if(perfilAtual?.perfil !== 'gestora'){
+
+    showToast(
+      'Acesso permitido somente para gestoras.'
+    );
+
+    return false;
+
+  }
+
+  return true;
+
+}
+
 
 async function fazerLogin(){
 
   const email =
-    document.getElementById('loginEmail').value.trim();
+    document
+      .getElementById('loginEmail')
+      .value
+      .trim();
 
   const senha =
-    document.getElementById('loginSenha').value;
+    document
+      .getElementById('loginSenha')
+      .value;
+
+  const erro =
+    document
+      .getElementById('loginErro');
+
+  if(erro){
+
+    erro.textContent = '';
+
+  }
 
   if(!email || !senha){
 
-    showToast('Informe e-mail e senha.');
+    if(erro){
+
+      erro.textContent =
+        'Informe o e-mail e a senha.';
+
+    }
 
     return;
   }
 
-  const { data, error } =
-    await db.auth.signInWithPassword({
-      email,
-      password: senha
-    });
-
-  if(error){
-
-    showToast(
-      'E-mail ou senha incorretos.'
+  const botao =
+    document.querySelector(
+      '.login-button'
     );
 
-    return;
+  if(botao){
+
+    botao.disabled = true;
+    botao.textContent = 'Entrando...';
+
   }
 
-  await carregarUsuarioLogado();
+  try{
+
+    const {
+      error
+    } =
+      await db.auth.signInWithPassword({
+
+        email:email,
+        password:senha
+
+      });
+
+    if(error){
+
+      if(erro){
+
+        erro.textContent =
+          'E-mail ou senha incorretos.';
+
+      }
+
+      return;
+    }
+
+    const autorizado =
+      await carregarUsuarioLogado();
+
+    if(autorizado){
+
+      await iniciarAplicativo();
+
+    }
+
+  }catch(error){
+
+    console.error(error);
+
+    if(erro){
+
+      erro.textContent =
+        'Não foi possível entrar. Tente novamente.';
+
+    }
+
+  }finally{
+
+    if(botao){
+
+      botao.disabled = false;
+      botao.textContent = 'Entrar';
+
+    }
+
+  }
+
+}
+
+
+async function sair(){
+
+  await db.auth.signOut();
+
+  usuarioAtual = null;
+  perfilAtual = null;
+
+  location.reload();
+
 }
 
 
@@ -4294,6 +4716,9 @@ function toggleDetalhe(id){
 
 async function toggleStatus(id){
 
+  if(!somenteGestora())
+    return;
+
   const r =
     registros.find(
       x=>x.id===id
@@ -4358,6 +4783,9 @@ async function toggleStatus(id){
 ========================================================= */
 
 async function excluirRegistro(id){
+
+  if(!somenteGestora())
+    return;
 
   if(!confirm(
     'Excluir este registro? Ele continuará no histórico.'
@@ -4439,6 +4867,9 @@ async function excluirRegistro(id){
 ========================================================= */
 
 async function restaurarRegistro(id){
+
+  if(!somenteGestora())
+    return;
 
   try{
 
@@ -4788,6 +5219,9 @@ document
   'click',
   async ()=>{
 
+    if(!somenteGestora())
+      return;
+
     const ids =
       Array.from(
         document.querySelectorAll(
@@ -4875,6 +5309,9 @@ document
 .addEventListener(
   'click',
   async ()=>{
+
+    if(!somenteGestora())
+      return;
 
     const ids =
       Array.from(
@@ -5221,15 +5658,15 @@ const doMes =
       );
 
 
-const pendentes =
-  registrosMes.filter(
-    r=>
-      r.status==='pendente' &&
-      envolveColaborador(
-        r,
-        colabFiltro
-      )
-  ).length;
+    const pendentes =
+      registrosMes.filter(
+        r=>
+          r.status==='pendente' &&
+          envolveColaborador(
+            r,
+            colabFiltro
+          )
+      ).length;
 
 
     const fh =
@@ -5831,33 +6268,43 @@ document
    INICIALIZAÇÃO
 ========================================================= */
 
-async function init(){
+async function iniciarAplicativo(){
 
   document.getElementById(
     'fData'
   ).value =
     todayISO();
 
-
   document.getElementById(
     'dFiltroMes'
   ).value =
     currentMonth();
 
-
   await loadData();
-
 
   populaColaboradorSelects();
 
-
   renderCamposEspecificos();
-
 
   renderDashboard();
 
 }
 
+
+async function init(){
+
+  const autenticado =
+    await carregarUsuarioLogado();
+
+  if(!autenticado){
+
+    return;
+
+  }
+
+  await iniciarAplicativo();
+
+}
 
 init();
 
