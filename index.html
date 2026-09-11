@@ -3,13 +3,7 @@
 
 <head>
 
-  <meta charset="UTF-8">
-
-  <title>Gestão de Atividades Técnicas</title>
-
-  <link rel="icon" type="image/png" href="mudancas-de-tempo.png">
-
-</head>
+<meta charset="UTF-8">
 
 <meta name="viewport"
       content="width=device-width, initial-scale=1.0">
@@ -745,7 +739,7 @@ function baixarHistoricoCSV(lista,nomeArquivo){
     excluido:'Excluído'
   };
 
-  let csv='Colaborador;Tipo;Data;Hora Inicial;Hora Final;Horas;Status;Detalhes\n';
+  let csv='Colaborador;Tipo;Data;Hora Inicial;Hora Final;Horas;Status;Motivo da Recusa;Detalhes\n';
 
   lista.forEach(r=>{
 
@@ -775,6 +769,7 @@ function baixarHistoricoCSV(lista,nomeArquivo){
       r.horaFinal||'',
       String(Math.round((r.horasTotal||0)*100)/100).replace('.',','),
       statusLabel[r.status]||r.status||'',
+      (r.motivoNegacao||'').replace(/[;\r\n]+/g,', '),
       detalhe.replace(/[;\r\n]+/g,', ')
     ];
 
@@ -2007,7 +2002,7 @@ document
 
 
   <div class="dashboard-highlight" id="dashboardHighlight">
-    <span>Maior disponibilidade no período: <strong id="highlightNome">—</strong></span>
+    <span>Maior ausência no período: <strong id="highlightNome">—</strong></span>
     <strong id="highlightHoras">00h 00min</strong>
   </div>
 
@@ -2116,6 +2111,7 @@ const db = createClient(
 
 let usuarioAtual = null;
 let perfilAtual = null;
+let registroEditandoId = null;
 
 async function carregarUsuarioLogado() {
 
@@ -2490,6 +2486,7 @@ let tipoAtual = 'treinamento';
 
 let chartInstance = null;
 let chartTypeInstance = null;
+let dashboardTipoSelecionado = null;
 
 
 const TIPO_LABEL = {
@@ -2883,6 +2880,9 @@ async function loadData(){
           r.rejected_at
           ? new Date(r.rejected_at).getTime()
           : null,
+
+        motivoNegacao:
+          r.motivo_negacao || '',
 
         deletedAt:
           r.deleted_at
@@ -4263,30 +4263,21 @@ if(tipoAtual==='treinamento'){
         );
 
 
-    const registro = {
+   const registro = {
+  id:
+    registroEditandoId ||
+    uid(),
 
-      id:uid(),
-
-      colaborador,
-
-      tipo:tipoAtual,
-
-      data,
-
-      horaInicial,
-
-      horaFinal,
-
-      horasTotal,
-
-      status:'pendente',
-
-      createdAt:Date.now(),
-
-      ...extra
-
-    };
-
+  colaborador,
+  tipo:tipoAtual,
+  data,
+  horaInicial,
+  horaFinal,
+  horasTotal,
+  status:'pendente',
+  createdAt:Date.now(),
+  ...extra
+};
 
     try{
 
@@ -4369,26 +4360,70 @@ if(tipoAtual==='treinamento'){
       };
 
 
-      const {
-        error
-      } = await db
-        .from('registros')
-        .insert(payload);
+     let error;
 
+if(registroEditandoId){
 
-      if(error)
-        throw error;
-
-
-      registros.unshift(
-        registro
+  const resultado =
+    await db
+      .from('registros')
+      .update(payload)
+      .eq(
+        'id',
+        registroEditandoId
       );
 
+  error =
+    resultado.error;
 
-      showToast(
-        'Registro salvo com sucesso'
-      );
+}else{
 
+  const resultado =
+    await db
+      .from('registros')
+      .insert(payload);
+
+  error =
+    resultado.error;
+}
+
+if(error)
+  throw error;
+
+
+      if(registroEditandoId){
+
+  const index =
+    registros.findIndex(
+      r => r.id === registroEditandoId
+    );
+
+  if(index !== -1){
+
+    registros[index] = {
+      ...registros[index],
+      ...registro
+    };
+
+  }
+
+}else{
+
+  registros.unshift(
+    registro
+  );
+
+}
+registroEditandoId = null;
+
+document.getElementById(
+  'btnSalvar'
+).textContent =
+  'Salvar registro';
+
+showToast(
+  'Registro salvo com sucesso'
+);
 
       document.getElementById(
         'fData'
@@ -4465,21 +4500,30 @@ document
 .getElementById('dFiltroMes')
 .addEventListener(
   'change',
-  renderDashboard
+  ()=>{
+    dashboardTipoSelecionado = null;
+    renderDashboard();
+  }
 );
 
 document
 .getElementById('dFiltroColab')
 .addEventListener(
   'change',
-  renderDashboard
+  ()=>{
+    dashboardTipoSelecionado = null;
+    renderDashboard();
+  }
 );
 
 document
 .getElementById('dFiltroTipo')
 .addEventListener(
   'change',
-  renderDashboard
+  ()=>{
+    dashboardTipoSelecionado = null;
+    renderDashboard();
+  }
 );
 
 
@@ -4770,12 +4814,42 @@ function detalheHTML(r){
   return corpo +
     auditoriaHTML(r);
 
+
+  if(r.status === 'rejeitado' && r.motivoNegacao){
+
+    html += `
+
+      <div style="
+        margin-top:12px;
+        padding:10px 12px;
+        border-radius:8px;
+        background:#FEF2F2;
+        border:1px solid #FECACA;
+        color:#991B1B;
+      ">
+
+        <b>Motivo da recusa:</b>
+        ${esc(r.motivoNegacao)}
+
+      </div>
+
+    `;
+  }
+
 }
 
 
 /* =========================================================
    HISTÓRICO
 ========================================================= */
+
+function normalizaTexto(valor){
+  return String(valor || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .toLowerCase();
+}
 
 function renderHistorico(){
 
@@ -4958,6 +5032,20 @@ function renderHistorico(){
 
           </span>
 
+          ${
+            r.status === 'rejeitado' && r.motivoNegacao
+            ? `<div style="
+                margin-top:6px;
+                font-size:11.5px;
+                color:#991B1B;
+                max-width:260px;
+              ">
+                <strong>Motivo:</strong>
+                ${esc(r.motivoNegacao)}
+              </div>`
+            : ''
+          }
+
         </td>
 
         <td>
@@ -4972,29 +5060,34 @@ function renderHistorico(){
 
         </td>
 
-        <td>
+<td>
+ ${
+  normalizaTexto(r.status) === 'pendente' &&
+  normalizaTexto(perfilAtual?.perfil) === 'tecnico'
+  ? `<button
+      class="icon-btn"
+      data-edit-id="${esc(r.id)}" title="Editar registro pendente">
+      Editar
+    </button>`
+  : ''
+}
 
-          ${
-            r.status==='excluido'
-
-            ?
-
-            `<button
-              class="icon-btn"
-              data-restore-id="${esc(r.id)}">
-              Restaurar
-            </button>`
-
-            :
-
-            `<button
-              class="icon-btn"
-              data-delete-id="${esc(r.id)}">
-              Excluir
-            </button>`
-          }
-
-        </td>
+  ${
+    r.status==='excluido'
+    ?
+    `<button
+      class="icon-btn"
+      data-restore-id="${esc(r.id)}">
+      Restaurar
+    </button>`
+    :
+    `<button
+      class="icon-btn"
+      data-delete-id="${esc(r.id)}">
+      Excluir
+    </button>`
+  }
+</td>
 
       </tr>
 
@@ -5096,7 +5189,22 @@ function renderHistorico(){
 
     });
 
+wrap
+  .querySelectorAll(
+    '[data-edit-id]'
+  )
+  .forEach(btn=>{
 
+    btn.addEventListener(
+      'click',
+      ()=>{
+        editarRegistro(
+          btn.dataset.editId
+        );
+      }
+    );
+
+  });
   wrap
     .querySelectorAll(
       '[data-delete-id]'
@@ -5221,7 +5329,216 @@ async function toggleStatus(id){
   }
 
 }
+/* =========================================================
+   EDITAR REGISTRO PENDENTE
+========================================================= */
 
+async function editarRegistro(id){
+
+  const r = registros.find(
+    x => x.id === id
+  );
+
+  if(!r)
+    return;
+
+  // Técnicos podem editar qualquer registro que ainda esteja pendente.
+  // Registros incluídos, rejeitados ou excluídos continuam bloqueados.
+  if(
+    normalizaTexto(perfilAtual?.perfil) !== 'tecnico' ||
+    normalizaTexto(r.status) !== 'pendente'
+  ){
+    showToast(
+      'Somente registros pendentes podem ser editados.'
+    );
+    return;
+  }
+
+  registroEditandoId = id;
+
+  // Seleciona a aba Novo registro
+  document
+    .querySelector(
+      '.tab[data-tab="novo"]'
+    )
+    .click();
+
+  // Colaborador
+  const colaborador =
+    document.getElementById(
+      'fColaborador'
+    );
+
+  if(colaborador){
+    colaborador.value =
+      r.colaborador;
+  }
+
+  // Data
+  document.getElementById(
+    'fData'
+  ).value = r.data;
+
+  // Tipo
+  tipoAtual = r.tipo;
+
+  document
+    .querySelectorAll(
+      '.tipo-card'
+    )
+    .forEach(card=>{
+      card.classList.toggle(
+        'selected',
+        card.dataset.tipo === r.tipo
+      );
+    });
+
+  // Renderiza os campos do tipo
+  renderCamposEspecificos();
+
+  // Preenche horários
+  if(r.tipo === 'viagem'){
+
+    document.getElementById(
+      'fOrigemIda'
+    ).value =
+      r.origemIda || '';
+
+    document.getElementById(
+      'fDestinoIda'
+    ).value =
+      r.destinoIda || '';
+
+    document.getElementById(
+      'fIdaSaida'
+    ).value =
+      r.idaSaida || '';
+
+    document.getElementById(
+      'fIdaChegada'
+    ).value =
+      r.idaChegada || '';
+
+    document.getElementById(
+      'fOrigemVolta'
+    ).value =
+      r.origemVolta || '';
+
+    document.getElementById(
+      'fDestinoVolta'
+    ).value =
+      r.destinoVolta || '';
+
+    document.getElementById(
+      'fVoltaSaida'
+    ).value =
+      r.voltaSaida || '';
+
+    document.getElementById(
+      'fVoltaChegada'
+    ).value =
+      r.voltaChegada || '';
+
+    document.getElementById(
+      'fObs'
+    ).value =
+      r.obs || '';
+
+  }else{
+
+    document.getElementById(
+      'fHoraInicial'
+    ).value =
+      r.horaInicial || '';
+
+    document.getElementById(
+      'fHoraFinal'
+    ).value =
+      r.horaFinal || '';
+
+    if(r.tipo === 'treinamento'){
+
+      document.getElementById(
+        'fTema'
+      ).value =
+        r.tema || '';
+
+      document.getElementById(
+        'fMinistrante'
+      ).value =
+        r.ministrante || '';
+
+      document.getElementById(
+        'fModalidade'
+      ).value =
+        r.modalidade || '';
+
+      document.getElementById(
+        'fInstituicao'
+      ).value =
+        r.instituicao || '';
+
+      document.getElementById(
+        'fConteudo'
+      ).value =
+        r.conteudo || '';
+
+      criaChipsParticipantes(
+        'fParticipantesChips',
+        (r.participantes || '')
+          .split(',')
+          .map(p=>p.trim())
+          .filter(Boolean)
+      );
+    }
+
+    if(r.tipo === 'acao'){
+
+      document.getElementById(
+        'fAcao'
+      ).value =
+        r.acao || '';
+
+      document.getElementById(
+        'fObs'
+      ).value =
+        r.obs || '';
+    }
+
+    if(r.tipo === 'reuniao'){
+
+      document.getElementById(
+        'fTipoReuniao'
+      ).value =
+        r.tipoReuniao || 'Interna';
+
+      document.getElementById(
+        'fObs'
+      ).value =
+        r.obs || '';
+
+      criaChipsParticipantes(
+        'fParticipantesChips',
+        (r.participantes || '')
+          .split(',')
+          .map(p=>p.trim())
+          .filter(Boolean)
+      );
+    }
+  }
+
+  atualizaReadout();
+
+  // Altera o texto do botão
+  document.getElementById(
+    'btnSalvar'
+  ).textContent =
+    'Salvar alterações';
+
+  showToast(
+    'Registro carregado para edição'
+  );
+}
 
 /* =========================================================
    EXCLUIR
@@ -5744,6 +6061,34 @@ document
 
 
 /* =========================================================
+   MOTIVO DA RECUSA
+========================================================= */
+
+function solicitarMotivoNegacao(){
+
+  const motivo = prompt(
+    'Informe o motivo da negação/recusa do registro:'
+  );
+
+  if(motivo === null)
+    return null;
+
+  const limpo = motivo.trim();
+
+  if(!limpo){
+
+    showToast(
+      'Informe o motivo da negação para continuar.'
+    );
+
+    return null;
+  }
+
+  return limpo;
+}
+
+
+/* =========================================================
    RECUSAR SELECIONADOS
 ========================================================= */
 
@@ -5780,17 +6125,19 @@ document
     }
 
 
+    const motivoNegacao =
+      solicitarMotivoNegacao();
+
+    if(motivoNegacao === null)
+      return;
+
     if(!confirm(
-      `${ids.length} registro(s) será(ão) marcado(s) como recusado(s).`
+      `${ids.length} registro(s) será(ão) marcado(s) como recusado(s).\\n\\nMotivo: ${motivoNegacao}`
     ))
       return;
 
 
     try{
-
-      const agora =
-        new Date().toISOString();
-
 
       const {
         error
@@ -5802,7 +6149,7 @@ document
 
           status:'rejeitado',
 
-          rejected_at:agora
+          motivo_negacao:motivoNegacao
 
         })
 
@@ -5822,6 +6169,9 @@ document
 
           r.rejectedAt =
             Date.now();
+
+          r.motivoNegacao =
+            motivoNegacao;
 
         }
 
@@ -5845,7 +6195,9 @@ document
       console.error(error);
 
       showToast(
-        'Erro ao recusar registros'
+        error?.message
+          ? `Erro ao recusar: ${error.message}`
+          : 'Erro ao recusar registros'
       );
 
     }
@@ -6061,6 +6413,11 @@ function renderDashboard(){
   const doMes = registrosMes.filter(r =>
     r.status === 'incluido'
   );
+
+  // Ao clicar em uma fatia da rosca, detalhamos somente aquele tipo.
+  const doMesVisual = dashboardTipoSelecionado
+    ? doMes.filter(r => r.tipo === dashboardTipoSelecionado)
+    : doMes;
 
 
   if(chartInstance){
@@ -6278,7 +6635,7 @@ function renderDashboard(){
 
   const porTecnico = {};
 
-  doMes.forEach(r => {
+  doMesVisual.forEach(r => {
     pessoasDoRegistro(r).forEach(tecnico => {
       porTecnico[tecnico] =
         (porTecnico[tecnico] || 0) + r.horasTotal;
@@ -6301,7 +6658,7 @@ function renderDashboard(){
     `${fh.h}h ${fh.m}`;
 
   document.getElementById('kpiRegistros').textContent =
-    doMes.length;
+    doMesVisual.length;
 
   document.getElementById('kpiTecnicos').textContent =
     nomes.length;
@@ -6310,26 +6667,47 @@ function renderDashboard(){
     pendentes;
 
   document.getElementById('chartLabel').textContent =
-    'Horas por técnico';
+    dashboardTipoSelecionado
+      ? `Horas por técnico — ${TIPO_LABEL[dashboardTipoSelecionado]}`
+      : 'Horas por técnico';
 
   document.getElementById('chartSub').textContent =
-    'Total individual de horas dos técnicos no período.';
+    dashboardTipoSelecionado
+      ? 'Horas individuais dos técnicos neste tipo. Clique novamente na rosca para voltar ao total.'
+      : 'Total individual de horas dos técnicos no período.';
 
   document.getElementById('listLabel').textContent =
-    'Ranking de técnicos';
+    dashboardTipoSelecionado
+      ? `Técnicos em ${TIPO_LABEL[dashboardTipoSelecionado]}`
+      : 'Ranking de técnicos';
 
   document.getElementById('listSub').textContent =
-    'Clique em um técnico para abrir seus registros detalhados.';
+    dashboardTipoSelecionado
+      ? 'Mostrando apenas as horas deste tipo de ação.'
+      : 'Clique em um técnico para abrir seus registros detalhados.';
 
 
   const primeiro = nomes[0];
 
   document.getElementById('highlightNome').textContent =
-    primeiro || '—';
+    dashboardTipoSelecionado
+      ? (primeiro ? `Maior em ${TIPO_LABEL[dashboardTipoSelecionado]}: ${primeiro}` : '—')
+      : (primeiro || '—');
 
   document.getElementById('highlightHoras').textContent =
     primeiro ? fmtHorasTxt(porTecnico[primeiro]) : '00h 00min';
 
+
+  /* ---------------------------------------------------------
+     GRÁFICO DE BARRAS: HORAS POR TÉCNICO
+     A altura cresce conforme a quantidade de técnicos para que
+     nenhum nome do eixo Y seja ocultado pelo Chart.js.
+  --------------------------------------------------------- */
+
+  const chartColabBox = document.querySelector('.chart-box-wide');
+  if(chartColabBox){
+    chartColabBox.style.height = `${Math.max(285, nomes.length * 30 + 35)}px`;
+  }
 
   chartInstance = new Chart(ctxColab, {
     type:'bar',
@@ -6339,7 +6717,7 @@ function renderDashboard(){
         data:nomes.map(n => Math.round(porTecnico[n]*100)/100),
         backgroundColor:'#D71A20',
         borderRadius:7,
-        maxBarThickness:44
+        maxBarThickness:24
       }]
     },
     options:{
@@ -6361,13 +6739,24 @@ function renderDashboard(){
           grid:{color:'#F0EDEE'}
         },
         y:{
-          ticks:{color:'#201F22'},
+          ticks:{
+            color:'#201F22',
+            autoSkip:false,
+            padding:8,
+            font:{size:11}
+          },
           grid:{display:false}
         }
       }
     }
   });
 
+
+  /* ---------------------------------------------------------
+     ROSCA NO DASHBOARD GERAL: DISTRIBUIÇÃO POR TIPO
+     A rosca deve mostrar Treinamento, Ação, Reunião e Viagem.
+     As horas são somadas somente dos registros incluídos.
+  --------------------------------------------------------- */
 
   const porTipo = {
     treinamento:0,
@@ -6378,19 +6767,19 @@ function renderDashboard(){
 
   doMes.forEach(r => {
     porTipo[r.tipo] =
-      (porTipo[r.tipo] || 0) + r.horasTotal;
+      (porTipo[r.tipo] || 0) + r.horasTotal * pessoasDoRegistro(r).size;
   });
 
-  const tiposAtivos = Object.keys(porTipo)
+  const tiposAtivosGeral = Object.keys(porTipo)
     .filter(t => porTipo[t] > 0)
     .sort((a,b) => porTipo[b] - porTipo[a]);
 
   chartTypeInstance = new Chart(ctxTipo, {
     type:'doughnut',
     data:{
-      labels:tiposAtivos.map(t => TIPO_LABEL[t]),
+      labels:tiposAtivosGeral.map(t => TIPO_LABEL[t]),
       datasets:[{
-        data:tiposAtivos.map(t => Math.round(porTipo[t]*100)/100),
+        data:tiposAtivosGeral.map(t => Math.round(porTipo[t]*100)/100),
         backgroundColor:['#D71A20','#E36B70','#A11318','#726F76'],
         borderWidth:2,
         borderColor:'#FFFFFF'
@@ -6415,6 +6804,23 @@ function renderDashboard(){
             label:c => `${c.label}: ${fmtHorasTxt(c.raw)}`
           }
         }
+      },
+      onClick:(event, elements)=>{
+        if(!elements.length) return;
+        const index = elements[0].index;
+        const tipoClicado = tiposAtivosGeral[index];
+        if(!tipoClicado) return;
+
+        // Segundo clique na mesma fatia limpa o detalhamento.
+        dashboardTipoSelecionado =
+          dashboardTipoSelecionado === tipoClicado
+            ? null
+            : tipoClicado;
+
+        renderDashboard();
+      },
+      onHover:(event, elements)=>{
+        event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
       }
     }
   });
@@ -6422,8 +6828,10 @@ function renderDashboard(){
 
   const typeSummary = document.getElementById('typeSummary');
 
-  typeSummary.innerHTML = tiposAtivos.length
-    ? tiposAtivos.map(t => `
+  typeSummary.innerHTML = tiposAtivosGeral.length
+    ? (dashboardTipoSelecionado
+        ? `<div style="font-size:11.5px;color:#726F76;margin-bottom:8px;">Filtro ativo: <b>${TIPO_LABEL[dashboardTipoSelecionado]}</b> — clique novamente na fatia para voltar ao total geral.</div>`
+        : '') + tiposAtivosGeral.map(t => `
         <div class="type-summary-row">
           <span class="type-summary-name">${TIPO_LABEL[t]}</span>
           <span class="type-summary-value">${fmtHorasTxt(porTipo[t])}</span>
