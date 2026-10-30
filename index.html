@@ -4453,6 +4453,8 @@ if(tipoAtual==='treinamento'){
   ...extra
 };
 
+    let salvouNoBanco = false;
+
     try{
 
       const payload = {
@@ -4587,6 +4589,8 @@ if(registroEditandoId){
 if(error)
   throw error;
 
+// A gravação no Supabase foi concluída; erros posteriores não são falha de salvamento.
+salvouNoBanco = true;
 
       if(registroEditandoId){
 
@@ -4614,10 +4618,15 @@ if(error)
 registroEditandoId = null;
 
 // Reconsulta o banco para manter histórico, dashboard e tabelas sincronizados.
-await loadData();
-renderHistorico();
-renderPendentes();
-renderDashboard();
+// Uma falha de atualização visual não desfaz a gravação já concluída.
+try {
+  await loadData();
+  renderHistorico();
+  renderPendentes();
+  renderDashboard();
+} catch (erroAtualizacao) {
+  console.error('Registro salvo, mas houve falha ao atualizar a tela:', erroAtualizacao);
+}
 
 document.getElementById(
   'btnSalvar'
@@ -4639,12 +4648,14 @@ showToast(
     }catch(error){
 
       console.error(
-        'Erro ao salvar:',
+        salvouNoBanco ? 'Registro salvo; erro após a gravação:' : 'Erro ao salvar:',
         error
       );
 
       showToast(
-        'Erro ao salvar registro'
+        salvouNoBanco
+          ? 'Registro salvo, mas houve um problema ao atualizar a tela'
+          : 'Erro ao salvar registro'
       );
 
     }
