@@ -3026,7 +3026,11 @@ async function loadData(){
         restoredAt:
           r.restored_at
           ? new Date(r.restored_at).getTime()
-          : null
+          : null,
+
+        editadoEm: r.editado_em || null,
+        editadoPor: r.editado_por || '',
+        historicoEdicoes: Array.isArray(r.historico_edicoes) ? r.historico_edicoes : []
 
       }));
 
@@ -4535,6 +4539,17 @@ if(tipoAtual==='treinamento'){
 
       };
 
+      // Metadados de auditoria persistidos no Supabase.
+      if(registroEditandoId){
+        const registroOriginal = registros.find(r=>r.id===registroEditandoId);
+        const agora = new Date().toISOString();
+        const responsavel = perfilAtual?.nome || usuarioAtual?.email || 'Usuário autenticado';
+        const historicoEdicoes = [...(registroOriginal?.historicoEdicoes || []), { em:agora, responsavel }];
+        payload.editado_em = agora;
+        payload.editado_por = responsavel;
+        payload.historico_edicoes = historicoEdicoes;
+      }
+
 
      let error;
 
@@ -4597,6 +4612,12 @@ if(error)
 
 }
 registroEditandoId = null;
+
+// Reconsulta o banco para manter histórico, dashboard e tabelas sincronizados.
+await loadData();
+renderHistorico();
+renderPendentes();
+renderDashboard();
 
 document.getElementById(
   'btnSalvar'
@@ -4846,6 +4867,13 @@ function auditoriaHTML(r){
 
   }
 
+  (r.historicoEdicoes || []).forEach((edicao, i)=>{
+    linhas.push(`<div><b>Edição ${i+1}:</b> ${esc(fmtDataHora(edicao.em))} · Responsável: ${esc(edicao.responsavel || 'Não informado')}</div>`);
+  });
+
+  if(r.editadoEm && !(r.historicoEdicoes || []).length){
+    linhas.push(`<b>Última edição:</b> ${esc(fmtDataHora(r.editadoEm))} · <b>Responsável:</b> ${esc(r.editadoPor || 'Não informado')}`);
+  }
 
   return `
     <div class="audit-trail">
@@ -4893,6 +4921,19 @@ function detalheHTML(r){
       <b>Conteúdo programático:</b>
       ${esc(r.conteudo)||'-'}
 
+    `;
+
+  }
+
+
+  if(r.tipo==='checklist'){
+
+    corpo = `
+      <b>Cliente:</b> ${esc(r.clienteChecklist)||'-'}
+      <br>
+      <b>Sistema:</b> ${esc(r.sistemaChecklist)||'-'}
+      <br>
+      <b>Obs:</b> ${esc(r.obs)||'-'}
     `;
 
   }
@@ -5245,7 +5286,7 @@ function renderHistorico(){
 <td>
  ${
   normalizaTexto(r.status) === 'pendente' &&
-  normalizaTexto(perfilAtual?.perfil) === 'tecnico'
+  ['tecnico','gestora'].includes(normalizaTexto(perfilAtual?.perfil))
   ? `<button
       class="icon-btn"
       data-edit-id="${esc(r.id)}" title="Editar registro pendente">
@@ -5524,10 +5565,9 @@ async function editarRegistro(id){
   if(!r)
     return;
 
-  // Técnicos podem editar qualquer registro que ainda esteja pendente.
-  // Registros incluídos, rejeitados ou excluídos continuam bloqueados.
+  // Técnicos e gestoras podem editar registros enquanto estiverem pendentes.
   if(
-    normalizaTexto(perfilAtual?.perfil) !== 'tecnico' ||
+    !['tecnico','gestora'].includes(normalizaTexto(perfilAtual?.perfil)) ||
     normalizaTexto(r.status) !== 'pendente'
   ){
     showToast(
@@ -6060,6 +6100,7 @@ function renderPendentes(){
             Detalhes
 
           </button>
+          <button class="icon-btn" data-pend-edit-id="${esc(r.id)}" title="Editar registro pendente">Editar</button>
 
         </td>
 
@@ -6156,6 +6197,10 @@ function renderPendentes(){
       );
 
     });
+
+  wrap.querySelectorAll('[data-pend-edit-id]').forEach(btn=>{
+    btn.addEventListener('click', ()=>editarRegistro(btn.dataset.pendEditId));
+  });
 
 }
 
