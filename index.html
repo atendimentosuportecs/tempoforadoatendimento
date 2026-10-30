@@ -1738,8 +1738,8 @@ document
       <p><b>Colaborador:</b> Bruno Oliveira</p>
       <p><b>Data:</b> 01/01/2026</p>
       <p><b>Hora Inicial e Hora Final</b> 08h30 - 10h30</p>
-      <p><b>Ação:</b> Participação no Evento Conexão Fortes</p>
-      <p><b>Obs.:</b> Gravação e cobertura do evento</p>
+      <p><b>Ação:</b> Participação no Conexão Fortes</p>
+      <p><b>Obs.:</b> Gravação</p>
     </div>
     <p style="margin-top:10px"><b>Evite:</b> preencher somente “evento”, “atividade” ou “outros”. Informe o nome específico da ação.</p>
   </div>
@@ -2684,6 +2684,15 @@ const TIPO_ICON = {
 
       <path d="M22 2l-7 20-4-9-9-4 20-7z"/>
 
+    </svg>
+  `,
+
+  checklist:`
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 5h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h1"/>
+      <path d="M9 3h6v4H9z"/>
+      <path d="m7 13 2 2 4-4"/>
+      <path d="M15 14h3M15 18h3"/>
     </svg>
   `
 
@@ -3770,8 +3779,8 @@ function renderCamposEspecificos(){
     if(tipoAtual==='checklist'){
       html += `
         <div class="field-row">
-          <div class="field"><label>Cliente <span style="color:#D71A20">*</span></label><input type="text" id="fClienteChecklist" required placeholder="Nome do cliente"></div>
-          <div class="field"><label>Sistema <span style="color:#D71A20">*</span></label><select id="fSistemaChecklist" required><option value="">Selecione o sistema</option><option value="Fortes AC">Fortes AC</option><option value="Fortes Ponto">Fortes Ponto</option></select></div>
+          <div class="field"><label>Nome do cliente <span style="color:#D71A20">*</span></label><input type="text" id="fClienteChecklist" required aria-required="true" placeholder="Informe o nome do cliente"></div>
+          <div class="field"><label>Tipo de checklist (Fortes AC ou Fortes Ponto) <span style="color:#D71A20">*</span></label><select id="fSistemaChecklist" required aria-required="true"><option value="">Selecione o sistema</option><option value="Fortes AC">Fortes AC</option><option value="Fortes Ponto">Fortes Ponto</option></select></div>
         </div>
         <div class="field-row"><div class="field" style="grid-column:1/-1"><label>Observação <span class="trecho-opc">(opcional)</span></label><textarea id="fObsChecklist" placeholder="Pontos relevantes identificados durante o checklist"></textarea></div></div>
       `;
@@ -4531,17 +4540,23 @@ if(tipoAtual==='treinamento'){
 
 if(registroEditandoId){
 
+  // Preserve a chave primária e confirme que uma linha foi atualizada.
+  const payloadEdicao = { ...payload };
+  delete payloadEdicao.id;
+
   const resultado =
     await db
       .from('registros')
-      .update(payload)
-      .eq(
-        'id',
-        registroEditandoId
-      );
+      .update(payloadEdicao)
+      .eq('id', registroEditandoId)
+      .select('id')
+      .maybeSingle();
 
-  error =
-    resultado.error;
+  error = resultado.error;
+
+  if(!error && !resultado.data){
+    throw new Error('O Supabase não atualizou nenhum registro. Verifique se o ID existe e se a política RLS permite UPDATE para o usuário técnico.');
+  }
 
 }else{
 
@@ -4589,7 +4604,7 @@ document.getElementById(
   'Salvar registro';
 
 showToast(
-  'Registro salvo com sucesso'
+  estavaEditando ? 'Registro atualizado com sucesso' : 'Registro salvo com sucesso'
 );
 
       document.getElementById(
@@ -5691,6 +5706,15 @@ async function editarRegistro(id){
           .map(p=>p.trim())
           .filter(Boolean)
       );
+    }
+
+    if(r.tipo === 'checklist'){
+      const campoCliente = document.getElementById('fClienteChecklist');
+      const campoSistema = document.getElementById('fSistemaChecklist');
+      const campoObs = document.getElementById('fObsChecklist');
+      if(campoCliente) campoCliente.value = r.clienteChecklist || '';
+      if(campoSistema) campoSistema.value = r.sistemaChecklist || '';
+      if(campoObs) campoObs.value = r.obs || '';
     }
   }
 
