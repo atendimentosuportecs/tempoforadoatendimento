@@ -1894,6 +1894,10 @@ document
           Viagem
         </option>
 
+        <option value="checklist">
+          Checklist
+        </option>
+
       </select>
 
     </div>
@@ -2084,6 +2088,7 @@ document
         <option value="acao">Ação</option>
         <option value="reuniao">Reunião</option>
         <option value="viagem">Viagem</option>
+        <option value="checklist">Checklist</option>
       </select>
     </div>
 
@@ -2620,6 +2625,16 @@ const TIPO_LABEL = {
 
 };
 
+// Paleta monocromática: tons de vermelho, vinho e rosa.
+const CORES_GRAFICOS = ['#B90E0A', '#D0312D', '#D21404', '#420C09', '#BC544B'];
+const CORES_POR_TIPO = {
+  treinamento:'#B90E0A', 
+  acao:'#D0312D',        
+  reuniao:'#D21404',    
+  viagem:'#420C09',      
+  checklist:'#BC544B'    
+};
+
 
 const TIPO_ICON = {
 
@@ -2855,6 +2870,82 @@ function fmtHorasTxt(dec){
 
   return `${f.h}h ${f.m}min`;
 
+}
+
+
+/* =========================================================
+   RÓTULOS DE DADOS NOS GRÁFICOS
+   Barras: mostra somente o total ao lado de cada barra empilhada.
+   Rosca: mostra as horas dentro das fatias com espaço suficiente.
+========================================================= */
+const rotulosDadosPlugin = {
+  id: 'rotulosDadosPersonalizados',
+  afterDatasetsDraw(chart) {
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.font = '600 10px Arial, sans-serif';
+    ctx.textBaseline = 'middle';
+
+    if (chart.config.type === 'bar') {
+      const escalaX = chart.scales.x;
+      const primeiroMeta = chart.getDatasetMeta(0);
+      if (escalaX && primeiroMeta) {
+        primeiroMeta.data.forEach((element, index) => {
+          const total = chart.data.datasets.reduce((soma, dataset, datasetIndex) => {
+            const meta = chart.getDatasetMeta(datasetIndex);
+            if (meta.hidden || dataset.hidden) return soma;
+            return soma + (Number(dataset.data[index]) || 0);
+          }, 0);
+          if (total <= 0) return;
+
+          const props = element.getProps(['y'], true);
+          const xFinal = escalaX.getPixelForValue(total);
+          ctx.textAlign = 'left';
+          ctx.fillStyle = '#4B4650';
+          ctx.shadowColor = 'rgba(255,255,255,0.9)';
+          ctx.shadowBlur = 3;
+          ctx.fillText(fmtHorasTxt(total), xFinal + 6, props.y);
+          ctx.shadowBlur = 0;
+        });
+      }
+    }
+
+    if (chart.config.type === 'doughnut') {
+      const meta = chart.getDatasetMeta(0);
+      const dataset = chart.data.datasets[0];
+      if (meta && dataset) {
+        ctx.textAlign = 'center';
+        meta.data.forEach((arc, index) => {
+          const valor = Number(dataset.data[index]) || 0;
+          if (valor <= 0) return;
+
+          const props = arc.getProps(
+            ['x', 'y', 'startAngle', 'endAngle', 'innerRadius', 'outerRadius'],
+            true
+          );
+          const angulo = Math.abs(props.endAngle - props.startAngle);
+          const raioMedio = (props.innerRadius + props.outerRadius) / 2;
+          // Fatias pequenas continuam identificáveis pela legenda e tooltip.
+          if (angulo < 0.28 || raioMedio < 20) return;
+
+          const meio = (props.startAngle + props.endAngle) / 2;
+          const x = props.x + Math.cos(meio) * raioMedio;
+          const y = props.y + Math.sin(meio) * raioMedio;
+          ctx.fillStyle = '#FFFFFF';
+          ctx.shadowColor = 'rgba(0,0,0,0.35)';
+          ctx.shadowBlur = 2;
+          ctx.fillText(`${Math.round(valor)}h`, x, y);
+          ctx.shadowBlur = 0;
+        });
+      }
+    }
+
+    ctx.restore();
+  }
+};
+
+if (typeof Chart !== 'undefined') {
+  Chart.register(rotulosDadosPlugin);
 }
 
 
@@ -4136,6 +4227,9 @@ document
   'click',
   async ()=>{
 
+    // Guarda o modo de edição antes de zerar o ID após salvar.
+    const estavaEditando = Boolean(registroEditandoId);
+
     const colaborador =
       document.getElementById(
         'fColaborador'
@@ -4652,10 +4746,11 @@ showToast(
         error
       );
 
+      const mensagemErro = error?.message || error?.details || 'verifique as permissões do Supabase';
       showToast(
         salvouNoBanco
           ? 'Registro salvo, mas houve um problema ao atualizar a tela'
-          : 'Erro ao salvar registro'
+          : `${estavaEditando ? 'Erro ao editar' : 'Erro ao salvar'}: ${mensagemErro}`.slice(0, 125)
       );
 
     }
@@ -6709,7 +6804,8 @@ function renderDashboard(){
       treinamento:0,
       acao:0,
       reuniao:0,
-      viagem:0
+      viagem:0,
+      checklist:0
     };
 
     doColab.forEach(r => {
@@ -6757,7 +6853,7 @@ function renderDashboard(){
         labels: tiposAtivos.map(t => TIPO_LABEL[t]),
         datasets:[{
           data: tiposAtivos.map(t => Math.round(tipos[t]*100)/100),
-          backgroundColor:'#D71A20',
+          backgroundColor:tiposAtivos.map(t => CORES_POR_TIPO[t] || CORES_GRAFICOS[0]),
           borderRadius:7,
           maxBarThickness:52
         }]
@@ -6795,7 +6891,7 @@ function renderDashboard(){
         labels: tiposAtivos.map(t => TIPO_LABEL[t]),
         datasets:[{
           data: tiposAtivos.map(t => Math.round(tipos[t]*100)/100),
-          backgroundColor:['#D71A20','#E36B70','#A11318','#726F76'],
+          backgroundColor:tiposAtivos.map(t => CORES_POR_TIPO[t] || CORES_GRAFICOS[0]),
           borderWidth:2,
           borderColor:'#FFFFFF'
         }]
@@ -6880,17 +6976,24 @@ function renderDashboard(){
      MODO: DASHBOARD GERAL
   --------------------------------------------------------- */
 
+  // Soma as horas por técnico E por tipo, para montar barras empilhadas.
+  // Cada segmento representa a participação daquele tipo no total do técnico.
   const porTecnico = {};
+  const porTecnicoTipo = {};
 
   doMesVisual.forEach(r => {
     pessoasDoRegistro(r).forEach(tecnico => {
-      porTecnico[tecnico] =
-        (porTecnico[tecnico] || 0) + r.horasTotal;
+      porTecnico[tecnico] = (porTecnico[tecnico] || 0) + r.horasTotal;
+      if(!porTecnicoTipo[tecnico]) porTecnicoTipo[tecnico] = {};
+      porTecnicoTipo[tecnico][r.tipo] =
+        (porTecnicoTipo[tecnico][r.tipo] || 0) + r.horasTotal;
     });
   });
 
   const nomes = Object.keys(porTecnico)
     .sort((a,b) => porTecnico[b] - porTecnico[a]);
+  const tiposNoGrafico = Object.keys(CORES_POR_TIPO)
+    .filter(tipo => nomes.some(nome => (porTecnicoTipo[nome]?.[tipo] || 0) > 0));
 
   const totalHoras = Object.values(porTecnico)
     .reduce((s,h) => s+h, 0);
@@ -6921,7 +7024,7 @@ function renderDashboard(){
   document.getElementById('chartSub').textContent =
     dashboardTipoSelecionado
       ? 'Horas individuais dos técnicos neste tipo. Clique novamente na rosca para voltar ao total.'
-      : 'Total individual de horas dos técnicos no período.';
+      : 'Cada barra mostra o total de horas dividido proporcionalmente por tipo de atividade.';
 
   document.getElementById('listLabel').textContent =
     dashboardTipoSelecionado
@@ -6960,32 +7063,47 @@ function renderDashboard(){
     type:'bar',
     data:{
       labels:nomes,
-      datasets:[{
-        data:nomes.map(n => Math.round(porTecnico[n]*100)/100),
-        backgroundColor:'#D71A20',
-        borderRadius:7,
-        maxBarThickness:24
-      }]
+      datasets:tiposNoGrafico.map(tipo => ({
+        label:TIPO_LABEL[tipo],
+        data:nomes.map(nome => Math.round((porTecnicoTipo[nome]?.[tipo] || 0)*100)/100),
+        backgroundColor:CORES_POR_TIPO[tipo],
+        borderColor:'#FFFFFF',
+        borderWidth:1,
+        borderSkipped:false,
+        borderRadius:tiposNoGrafico.length === 1 ? 7 : 2,
+        maxBarThickness:24,
+        stack:'horas'
+      }))
     },
     options:{
       indexAxis:'y',
       responsive:true,
       maintainAspectRatio:false,
+      layout:{padding:{right:72}},
       plugins:{
-        legend:{display:false},
+        legend:{
+          display:tiposNoGrafico.length > 1,
+          position:'bottom',
+          labels:{color:'#201F22',boxWidth:10,usePointStyle:true,padding:12,font:{size:10}}
+        },
         tooltip:{
           callbacks:{
-            label:c => fmtHorasTxt(c.raw)
+            label:c => `${c.dataset.label}: ${fmtHorasTxt(c.raw)}`,
+            footer:items => `Total: ${fmtHorasTxt(items.reduce((s,item)=>s + (Number(item.raw)||0),0))}`
           }
         }
       },
       scales:{
         x:{
           beginAtZero:true,
+          stacked:true,
+          max: Math.max(1, ...nomes.map(nome => tiposNoGrafico.reduce((soma, tipo) => soma + (porTecnicoTipo[nome]?.[tipo] || 0), 0))) * 1.18,
+          title:{display:true,text:'Horas',color:'#726F76'},
           ticks:{color:'#726F76'},
           grid:{color:'#F0EDEE'}
         },
         y:{
+          stacked:true,
           ticks:{
             color:'#201F22',
             autoSkip:false,
@@ -7009,7 +7127,8 @@ function renderDashboard(){
     treinamento:0,
     acao:0,
     reuniao:0,
-    viagem:0
+    viagem:0,
+    checklist:0
   };
 
   doMes.forEach(r => {
@@ -7027,7 +7146,7 @@ function renderDashboard(){
       labels:tiposAtivosGeral.map(t => TIPO_LABEL[t]),
       datasets:[{
         data:tiposAtivosGeral.map(t => Math.round(porTipo[t]*100)/100),
-        backgroundColor:['#D71A20','#E36B70','#A11318','#726F76'],
+        backgroundColor:tiposAtivosGeral.map(t => CORES_POR_TIPO[t] || CORES_GRAFICOS[0]),
         borderWidth:2,
         borderColor:'#FFFFFF'
       }]
